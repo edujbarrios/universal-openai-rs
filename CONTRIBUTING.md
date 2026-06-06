@@ -1,6 +1,6 @@
 # Contributing
 
-Thank you for considering a contribution to `universal-openai`.
+Thank you for considering a contribution to `universal-openai-rs`.
 
 This project aims to stay:
 
@@ -24,4 +24,3 @@ Prefer builder methods that make common calls short, but keep the underlying
 serialized JSON close to the OpenAI-compatible API specification. When a
 provider adds an option that is not part of the core types, use `extra` fields
 instead of adding a provider-specific dependency to the main API.
-

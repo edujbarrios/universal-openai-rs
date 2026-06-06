@@ -1,6 +1,6 @@
 # Roadmap
 
-`universal-openai` starts with chat completions and grows outward without making
+`universal-openai-rs` starts with chat completions and grows outward without making
 the simple path harder to use.
 
 ## Milestone 1: Chat Completions
@@ -33,4 +33,3 @@ the simple path harder to use.
 - Document provider differences.
 - Keep examples for OpenAI-compatible local and hosted APIs.
 - Avoid provider lock-in in the core crate.
-

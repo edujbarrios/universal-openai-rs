@@ -1,5 +1,5 @@
 use serde_json::json;
-use universal_openai::{ChatMessage, ChatRole, Client, Config, Error};
+use universal_openai_rs::{ChatMessage, ChatRole, Client, Config, Error};
 
 #[test]
 fn builds_openai_compatible_chat_request() {
@@ -61,4 +61,3 @@ fn serializes_chat_message_roles() {
         json!({"role": "assistant", "content": "Done."})
     );
 }
-

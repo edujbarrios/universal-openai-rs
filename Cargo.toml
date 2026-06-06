@@ -1,11 +1,11 @@
 [package]
-name = "universal-openai"
+name = "universal-openai-rs"
 version = "0.1.0"
 edition = "2021"
 authors = ["Eduardo J. Barrios <edujbarrios@users.noreply.github.com>"]
 license = "MIT"
 description = "A self-maintained, OpenAI-compatible API wrapper for Rust."
-repository = "https://github.com/edujbarrios/universal-openai"
+repository = "https://github.com/edujbarrios/universal-openai-rs"
 readme = "README.md"
 keywords = ["openai", "llm", "api", "rust", "client"]
 categories = ["api-bindings", "web-programming::http-client"]
@@ -18,4 +18,3 @@ thiserror = "1"
 
 [dev-dependencies]
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
-

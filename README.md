@@ -22,10 +22,10 @@ It is open source from the beginning and maintained under the GitHub identity
 For the shortest common path:
 
 ```rust
-use universal_openai::Client;
+use universal_openai_rs::Client;
 
 #[tokio::main]
-async fn main() -> universal_openai::Result<()> {
+async fn main() -> universal_openai_rs::Result<()> {
     let client = Client::from_env()?;
     let response = client.chat_text("gpt-4o-mini", "Write one sentence about Rust.").await?;
 
@@ -37,10 +37,10 @@ async fn main() -> universal_openai::Result<()> {
 For a full OpenAI-compatible chat request:
 
 ```rust
-use universal_openai::{Client, ChatMessage};
+use universal_openai_rs::{Client, ChatMessage};
 
 #[tokio::main]
-async fn main() -> universal_openai::Result<()> {
+async fn main() -> universal_openai_rs::Result<()> {
     let client = Client::from_env()?;
 
     let response = client
@@ -63,7 +63,7 @@ By default, `Client::from_env()` reads:
 ## Provider-Agnostic Usage
 
 ```rust
-use universal_openai::{Client, Config};
+use universal_openai_rs::{Client, Config};
 
 let client = Client::new(
     Config::new("your-api-key")
