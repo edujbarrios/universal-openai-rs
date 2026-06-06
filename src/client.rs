@@ -1,4 +1,4 @@
-use crate::{ChatRequestBuilder, Config, Error, Result};
+use crate::{ChatCompletionResponse, ChatRequestBuilder, Config, Error, Result};
 
 #[derive(Debug, Clone)]
 pub struct Client {
@@ -26,6 +26,14 @@ impl Client {
         ChatRequestBuilder::new(self)
     }
 
+    pub async fn chat_text(
+        &self,
+        model: impl Into<String>,
+        prompt: impl Into<String>,
+    ) -> Result<ChatCompletionResponse> {
+        self.chat().model(model).user(prompt).send().await
+    }
+
     pub(crate) async fn post_json<T, R>(&self, path: &str, body: &T) -> Result<R>
     where
         T: serde::Serialize + ?Sized,
@@ -48,4 +56,3 @@ impl Client {
         Ok(response.json::<R>().await?)
     }
 }
-

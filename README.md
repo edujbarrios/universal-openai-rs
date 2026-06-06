@@ -19,6 +19,23 @@ It is open source from the beginning and maintained under the GitHub identity
 
 ## Quick Start
 
+For the shortest common path:
+
+```rust
+use universal_openai::Client;
+
+#[tokio::main]
+async fn main() -> universal_openai::Result<()> {
+    let client = Client::from_env()?;
+    let response = client.chat_text("gpt-4o-mini", "Write one sentence about Rust.").await?;
+
+    println!("{}", response.first_text().unwrap_or_default());
+    Ok(())
+}
+```
+
+For a full OpenAI-compatible chat request:
+
 ```rust
 use universal_openai::{Client, ChatMessage};
 
@@ -62,4 +79,3 @@ be called through the same client.
 This project is intentionally small and early. The first public milestone is a
 clean chat completions client, then streaming, embeddings, responses, and
 provider-specific compatibility notes.
-
