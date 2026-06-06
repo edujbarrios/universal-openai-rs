@@ -79,3 +79,5 @@ be called through the same client.
 This project is intentionally small and early. The first public milestone is a
 clean chat completions client, then streaming, embeddings, responses, and
 provider-specific compatibility notes.
+
+See [ROADMAP.md](ROADMAP.md) for the public development path.
