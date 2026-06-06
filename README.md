@@ -1,8 +1,8 @@
-# universal-openai
+# universal-openai-rs
 
 A self-maintained, OpenAI-compatible API wrapper for Rust.
 
-`universal-openai` is built for one idea: keep the wire format compatible with
+`universal-openai-rs` is built for one idea: keep the wire format compatible with
 the OpenAI API specification while making everyday Rust calls feel simple,
 predictable, and provider-agnostic.
 
