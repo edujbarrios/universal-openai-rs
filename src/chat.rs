@@ -1,7 +1,11 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use futures_util::StreamExt;
+use std::pin::Pin;
 
 use crate::{Client, Error, Result};
+
+pub type ChatStream = Pin<Box<dyn futures_core::Stream<Item = Result<ChatStreamEvent>> + Send>>;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -16,6 +20,12 @@ pub enum ChatRole {
 pub struct ChatMessage {
     pub role: ChatRole,
     pub content: String,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tool_call_id: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tool_calls: Option<Vec<ToolCall>>,
 }
 
 impl ChatMessage {
@@ -23,6 +33,8 @@ impl ChatMessage {
         Self {
             role: ChatRole::System,
             content: content.into(),
+            tool_call_id: None,
+            tool_calls: None,
         }
     }
 
@@ -30,6 +42,8 @@ impl ChatMessage {
         Self {
             role: ChatRole::User,
             content: content.into(),
+            tool_call_id: None,
+            tool_calls: None,
         }
     }
 
@@ -37,8 +51,64 @@ impl ChatMessage {
         Self {
             role: ChatRole::Assistant,
             content: content.into(),
+            tool_call_id: None,
+            tool_calls: None,
         }
     }
+
+    pub fn tool(tool_call_id: impl Into<String>, content: impl Into<String>) -> Self {
+        Self {
+            role: ChatRole::Tool,
+            content: content.into(),
+            tool_call_id: Some(tool_call_id.into()),
+            tool_calls: None,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct Tool {
+    #[serde(rename = "type")]
+    pub kind: String,
+    pub function: FunctionTool,
+}
+
+impl Tool {
+    pub fn function(
+        name: impl Into<String>,
+        description: impl Into<String>,
+        parameters: Value,
+    ) -> Self {
+        Self {
+            kind: "function".to_string(),
+            function: FunctionTool {
+                name: name.into(),
+                description: description.into(),
+                parameters,
+            },
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct FunctionTool {
+    pub name: String,
+    pub description: String,
+    pub parameters: Value,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ToolCall {
+    pub id: String,
+    #[serde(rename = "type")]
+    pub kind: String,
+    pub function: ToolCallFunction,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ToolCallFunction {
+    pub name: String,
+    pub arguments: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -51,6 +121,18 @@ pub struct ChatCompletionRequest {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub max_tokens: Option<u32>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub stream: Option<bool>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tools: Option<Vec<Tool>>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tool_choice: Option<Value>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub response_format: Option<Value>,
 
     #[serde(flatten)]
     pub extra: serde_json::Map<String, Value>,
@@ -69,11 +151,77 @@ pub struct ChatCompletionResponse {
     pub extra: serde_json::Map<String, Value>,
 }
 
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ChatStreamEvent {
+    pub id: Option<String>,
+    pub object: Option<String>,
+    pub created: Option<u64>,
+    pub model: Option<String>,
+    pub choices: Vec<ChatStreamChoice>,
+
+    #[serde(flatten)]
+    pub extra: serde_json::Map<String, Value>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ChatStreamChoice {
+    pub index: Option<u32>,
+    pub delta: ChatStreamDelta,
+    pub finish_reason: Option<String>,
+
+    #[serde(flatten)]
+    pub extra: serde_json::Map<String, Value>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ChatStreamDelta {
+    pub role: Option<ChatRole>,
+    pub content: Option<String>,
+    pub tool_calls: Option<Vec<ChatStreamToolCall>>,
+
+    #[serde(flatten)]
+    pub extra: serde_json::Map<String, Value>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ChatStreamToolCall {
+    pub index: Option<u32>,
+    pub id: Option<String>,
+    #[serde(rename = "type")]
+    pub kind: Option<String>,
+    pub function: Option<ChatStreamToolCallFunction>,
+
+    #[serde(flatten)]
+    pub extra: serde_json::Map<String, Value>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ChatStreamToolCallFunction {
+    pub name: Option<String>,
+    pub arguments: Option<String>,
+}
+
 impl ChatCompletionResponse {
     pub fn first_text(&self) -> Option<&str> {
         self.choices
             .first()
             .map(|choice| choice.message.content.as_str())
+    }
+
+    pub fn text(self) -> Result<String> {
+        self.choices
+            .into_iter()
+            .next()
+            .map(|choice| choice.message.content)
+            .ok_or(Error::MissingText)
+    }
+
+    pub fn json<T>(&self) -> Result<T>
+    where
+        T: serde::de::DeserializeOwned,
+    {
+        let text = self.first_text().ok_or(Error::MissingText)?;
+        Ok(serde_json::from_str(text)?)
     }
 }
 
@@ -101,6 +249,10 @@ pub struct ChatRequestBuilder<'a> {
     messages: Vec<ChatMessage>,
     temperature: Option<f32>,
     max_tokens: Option<u32>,
+    stream: Option<bool>,
+    tools: Option<Vec<Tool>>,
+    tool_choice: Option<Value>,
+    response_format: Option<Value>,
     extra: serde_json::Map<String, Value>,
 }
 
@@ -112,6 +264,10 @@ impl<'a> ChatRequestBuilder<'a> {
             messages: Vec::new(),
             temperature: None,
             max_tokens: None,
+            stream: None,
+            tools: None,
+            tool_choice: None,
+            response_format: None,
             extra: serde_json::Map::new(),
         }
     }
@@ -148,6 +304,32 @@ impl<'a> ChatRequestBuilder<'a> {
         self
     }
 
+    pub fn tool(mut self, tool: Tool) -> Self {
+        self.tools.get_or_insert_with(Vec::new).push(tool);
+        self
+    }
+
+    pub fn tool_choice(mut self, tool_choice: impl Into<Value>) -> Self {
+        self.tool_choice = Some(tool_choice.into());
+        self
+    }
+
+    pub fn json_object(mut self) -> Self {
+        self.response_format = Some(serde_json::json!({ "type": "json_object" }));
+        self
+    }
+
+    pub fn json_schema(mut self, name: impl Into<String>, schema: Value) -> Self {
+        self.response_format = Some(serde_json::json!({
+            "type": "json_schema",
+            "json_schema": {
+                "name": name.into(),
+                "schema": schema
+            }
+        }));
+        self
+    }
+
     pub fn extra(mut self, key: impl Into<String>, value: impl Into<Value>) -> Self {
         self.extra.insert(key.into(), value.into());
         self
@@ -170,6 +352,10 @@ impl<'a> ChatRequestBuilder<'a> {
             messages: self.messages,
             temperature: self.temperature,
             max_tokens: self.max_tokens,
+            stream: self.stream,
+            tools: self.tools,
+            tool_choice: self.tool_choice,
+            response_format: self.response_format,
             extra: self.extra,
         })
     }
@@ -178,5 +364,26 @@ impl<'a> ChatRequestBuilder<'a> {
         let request = self.build()?;
         self.client.post_json("chat/completions", &request).await
     }
-}
 
+    pub async fn stream(mut self) -> Result<ChatStream> {
+        self.stream = Some(true);
+        let request = self.build()?;
+        self.client.post_sse("chat/completions", &request).await
+    }
+
+    pub async fn stream_text(self) -> Result<String> {
+        let mut stream = self.stream().await?;
+        let mut output = String::new();
+
+        while let Some(event) = stream.next().await {
+            let event = event?;
+            for choice in event.choices {
+                if let Some(text) = choice.delta.content {
+                    output.push_str(&text);
+                }
+            }
+        }
+
+        Ok(output)
+    }
+}
