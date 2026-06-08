@@ -6,6 +6,7 @@ use crate::{
     Result,
 };
 use futures_util::StreamExt;
+use reqwest::RequestBuilder;
 use std::time::Duration;
 
 #[derive(Debug, Clone)]
@@ -19,6 +20,7 @@ impl Client {
         if config.api_key().trim().is_empty() {
             return Err(Error::InvalidConfig("API key cannot be empty".to_string()));
         }
+        config.header_map()?;
 
         let mut builder = reqwest::Client::builder();
         if let Some(timeout) = config.timeout() {
@@ -29,6 +31,15 @@ impl Client {
             config,
             http: builder.build()?,
         })
+    }
+
+    pub fn with_http_client(config: Config, http: reqwest::Client) -> Result<Self> {
+        if config.api_key().trim().is_empty() {
+            return Err(Error::InvalidConfig("API key cannot be empty".to_string()));
+        }
+        config.header_map()?;
+
+        Ok(Self { config, http })
     }
 
     pub fn from_env() -> Result<Self> {
@@ -286,9 +297,7 @@ impl Client {
         R: serde::de::DeserializeOwned,
     {
         let response = self
-            .http
-            .get(self.config.endpoint(path)?)
-            .bearer_auth(self.config.api_key())
+            .authorized(self.http.get(self.config.endpoint(path)?))?
             .send()
             .await?;
 
@@ -297,9 +306,7 @@ impl Client {
 
     pub(crate) async fn get_bytes(&self, path: &str) -> Result<Vec<u8>> {
         let response = self
-            .http
-            .get(self.config.endpoint(path)?)
-            .bearer_auth(self.config.api_key())
+            .authorized(self.http.get(self.config.endpoint(path)?))?
             .send()
             .await?;
 
@@ -317,9 +324,7 @@ impl Client {
         R: serde::de::DeserializeOwned,
     {
         let response = self
-            .http
-            .delete(self.config.endpoint(path)?)
-            .bearer_auth(self.config.api_key())
+            .authorized(self.http.delete(self.config.endpoint(path)?))?
             .send()
             .await?;
 
@@ -335,9 +340,7 @@ impl Client {
         R: serde::de::DeserializeOwned,
     {
         let response = self
-            .http
-            .post(self.config.endpoint(path)?)
-            .bearer_auth(self.config.api_key())
+            .authorized(self.http.post(self.config.endpoint(path)?))?
             .multipart(form)
             .send()
             .await?;
@@ -355,9 +358,7 @@ impl Client {
 
         loop {
             let response = self
-                .http
-                .post(&endpoint)
-                .bearer_auth(self.config.api_key())
+                .authorized(self.http.post(&endpoint))?
                 .json(body)
                 .send()
                 .await;
@@ -402,9 +403,7 @@ impl Client {
         T: serde::Serialize + ?Sized,
     {
         let response = self
-            .http
-            .post(self.config.endpoint(path)?)
-            .bearer_auth(self.config.api_key())
+            .authorized(self.http.post(self.config.endpoint(path)?))?
             .json(body)
             .send()
             .await?;
@@ -449,6 +448,12 @@ impl Client {
     fn should_retry(&self, status: reqwest::StatusCode, attempt: usize) -> bool {
         attempt < self.config.max_retries()
             && (status == reqwest::StatusCode::TOO_MANY_REQUESTS || status.is_server_error())
+    }
+
+    fn authorized(&self, request: RequestBuilder) -> Result<RequestBuilder> {
+        Ok(request
+            .bearer_auth(self.config.api_key())
+            .headers(self.config.header_map()?))
     }
 
     fn should_retry_error(&self, error: &reqwest::Error, attempt: usize) -> bool {

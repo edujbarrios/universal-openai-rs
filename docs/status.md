@@ -26,6 +26,8 @@ simple agent-oriented workflows.
 - Fine-tuning jobs API.
 - Moderations API.
 - Configurable request timeouts.
+- Custom `reqwest::Client` injection for production HTTP configuration.
+- User-Agent, organization, project, and provider-specific request headers.
 - Conservative retry support for JSON POST requests.
 - Provider presets and custom OpenAI-compatible base URLs.
 - Raw compatibility escape hatches for POST, GET, and DELETE.

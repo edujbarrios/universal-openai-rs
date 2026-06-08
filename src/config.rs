@@ -1,4 +1,5 @@
 use crate::{Error, Result};
+use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
 use std::time::Duration;
 
 const DEFAULT_BASE_URL: &str = "https://api.openai.com/v1";
@@ -10,6 +11,10 @@ pub struct Config {
     timeout: Option<Duration>,
     max_retries: usize,
     default_model: Option<String>,
+    user_agent: Option<String>,
+    organization: Option<String>,
+    project: Option<String>,
+    headers: Vec<(String, String)>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -43,6 +48,10 @@ impl Config {
             timeout: Some(Duration::from_secs(60)),
             max_retries: 2,
             default_model: None,
+            user_agent: None,
+            organization: None,
+            project: None,
+            headers: Vec::new(),
         }
     }
 
@@ -90,6 +99,26 @@ impl Config {
         self
     }
 
+    pub fn with_user_agent(mut self, user_agent: impl Into<String>) -> Self {
+        self.user_agent = Some(user_agent.into());
+        self
+    }
+
+    pub fn with_organization(mut self, organization: impl Into<String>) -> Self {
+        self.organization = Some(organization.into());
+        self
+    }
+
+    pub fn with_project(mut self, project: impl Into<String>) -> Self {
+        self.project = Some(project.into());
+        self
+    }
+
+    pub fn with_header(mut self, name: impl Into<String>, value: impl Into<String>) -> Self {
+        self.headers.push((name.into(), value.into()));
+        self
+    }
+
     pub fn api_key(&self) -> &str {
         &self.api_key
     }
@@ -110,6 +139,44 @@ impl Config {
         self.default_model.as_deref()
     }
 
+    pub fn user_agent(&self) -> Option<&str> {
+        self.user_agent.as_deref()
+    }
+
+    pub fn organization(&self) -> Option<&str> {
+        self.organization.as_deref()
+    }
+
+    pub fn project(&self) -> Option<&str> {
+        self.project.as_deref()
+    }
+
+    pub fn headers(&self) -> &[(String, String)] {
+        &self.headers
+    }
+
+    pub(crate) fn header_map(&self) -> Result<HeaderMap> {
+        let mut headers = HeaderMap::new();
+
+        if let Some(user_agent) = &self.user_agent {
+            insert_header(&mut headers, "user-agent", user_agent)?;
+        }
+
+        if let Some(organization) = &self.organization {
+            insert_header(&mut headers, "openai-organization", organization)?;
+        }
+
+        if let Some(project) = &self.project {
+            insert_header(&mut headers, "openai-project", project)?;
+        }
+
+        for (name, value) in &self.headers {
+            insert_header(&mut headers, name, value)?;
+        }
+
+        Ok(headers)
+    }
+
     pub(crate) fn endpoint(&self, path: &str) -> Result<String> {
         if self.base_url.is_empty() {
             return Err(Error::InvalidConfig("base URL cannot be empty".to_string()));
@@ -121,4 +188,14 @@ impl Config {
             path.trim_start_matches('/')
         ))
     }
+}
+
+fn insert_header(headers: &mut HeaderMap, name: &str, value: &str) -> Result<()> {
+    let name = HeaderName::from_bytes(name.as_bytes())
+        .map_err(|_| Error::InvalidConfig(format!("invalid HTTP header name: {name}")))?;
+    let value = HeaderValue::from_str(value)
+        .map_err(|_| Error::InvalidConfig(format!("invalid HTTP header value for: {name}")))?;
+
+    headers.insert(name, value);
+    Ok(())
 }

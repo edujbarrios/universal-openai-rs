@@ -168,6 +168,31 @@ let ollama = Client::for_provider("ollama", Provider::Ollama)?;
 let custom = Client::compatible("your-api-key", "https://api.example.com/v1")?;
 ```
 
+## Production HTTP Configuration
+
+For production clients, keep the simple crate API while bringing your own
+`reqwest::Client` for proxies, certificates, connection pooling, TCP keepalive,
+global defaults, or custom transport settings.
+
+```rust
+use std::time::Duration;
+use universal_openai_rs::{Client, Config};
+
+let http = reqwest::Client::builder()
+    .pool_idle_timeout(Duration::from_secs(90))
+    .tcp_keepalive(Duration::from_secs(30))
+    .build()?;
+
+let config = Config::new("your-api-key")
+    .with_base_url("https://api.example.com/v1")
+    .with_user_agent("my-agent-service/0.1")
+    .with_organization("org_123")
+    .with_project("proj_123")
+    .with_header("x-provider-routing", "fast");
+
+let client = Client::with_http_client(config, http)?;
+```
+
 ## Adding an OpenAI-Compatible Third-Party API
 
 Any provider that exposes an OpenAI-compatible `/v1` API can be used by changing

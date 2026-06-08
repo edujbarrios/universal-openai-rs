@@ -19,6 +19,7 @@ path first, then reveal lower-level OpenAI-compatible control only when needed.
 | `typed_json.rs` | Typed JSON parsing into a Rust struct |
 | `tool_calling.rs` | Function tool definitions |
 | `providers.rs` | Provider presets such as Ollama |
+| `production_http.rs` | Custom `reqwest::Client` and provider headers |
 | `escape_hatch.rs` | Raw OpenAI-compatible JSON calls |
 | `default_model.rs` | `OPENAI_MODEL` and `ask_default(...)` |
 | `models.rs` | Model listing |

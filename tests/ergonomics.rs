@@ -1,7 +1,7 @@
 use serde::Deserialize;
 use universal_openai_rs::{
-    ChatChoice, ChatCompletionResponse, ChatMessage, Config, EmbeddingData, EmbeddingsResponse,
-    Provider, ResponsesResponse,
+    ChatChoice, ChatCompletionResponse, ChatMessage, Client, Config, EmbeddingData,
+    EmbeddingsResponse, Error, Provider, ResponsesResponse,
 };
 
 #[derive(Debug, Deserialize, PartialEq, Eq)]
@@ -24,6 +24,35 @@ fn config_trims_base_url_whitespace_and_trailing_slashes() {
     let config = Config::new("test-key").with_base_url(" https://api.example.com/v1/// ");
 
     assert_eq!(config.base_url(), "https://api.example.com/v1");
+}
+
+#[test]
+fn config_stores_production_http_headers() {
+    let config = Config::new("test-key")
+        .with_user_agent("universal-openai-rs-test/0.1")
+        .with_organization("org-test")
+        .with_project("proj-test")
+        .with_header("x-provider-routing", "fast");
+
+    assert_eq!(config.user_agent(), Some("universal-openai-rs-test/0.1"));
+    assert_eq!(config.organization(), Some("org-test"));
+    assert_eq!(config.project(), Some("proj-test"));
+    assert_eq!(config.headers().len(), 1);
+}
+
+#[test]
+fn custom_http_client_still_validates_config() {
+    let error = Client::with_http_client(Config::new(" "), reqwest::Client::new()).unwrap_err();
+
+    assert!(matches!(error, Error::InvalidConfig(_)));
+}
+
+#[test]
+fn custom_http_client_rejects_invalid_headers() {
+    let config = Config::new("test-key").with_header("bad header", "value");
+    let error = Client::with_http_client(config, reqwest::Client::new()).unwrap_err();
+
+    assert!(matches!(error, Error::InvalidConfig(_)));
 }
 
 #[test]
