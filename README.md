@@ -286,6 +286,22 @@ Available escape hatches:
 - `delete_compatible(...)`
 - `.extra(...)` on builders for provider-specific fields
 
+## API Errors
+
+Provider errors keep the raw response body and also expose structured debugging
+fields when the provider returns OpenAI-compatible error JSON.
+
+```rust
+match error {
+    universal_openai_rs::Error::Api(api) => {
+        eprintln!("status: {}", api.status);
+        eprintln!("request id: {:?}", api.request_id);
+        eprintln!("provider code: {:?}", api.code);
+    }
+    other => eprintln!("{other}"),
+}
+```
+
 ## Current Caveats
 
 This project is early. Known issue areas include provider-specific response

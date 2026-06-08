@@ -1,5 +1,5 @@
 use crate::{
-    AgentSpec, Agents, Audio, ChatCompletionResponse, ChatRequestBuilder, ChatStream,
+    AgentSpec, Agents, ApiError, Audio, ChatCompletionResponse, ChatRequestBuilder, ChatStream,
     ChatStreamEvent, CompletionRequestBuilder, CompletionResponse, Config, EmbeddingsRequestBuilder,
     EmbeddingsResponse, Error, FileUploadBuilder, Files, FineTuning, ImagesRequestBuilder, Models,
     ModerationRequestBuilder, PromptBuilder, Provider, ResponseRequestBuilder, ResponsesResponse,
@@ -312,8 +312,7 @@ impl Client {
 
         let status = response.status();
         if !status.is_success() {
-            let body = response.text().await.unwrap_or_default();
-            return Err(Error::Api { status, body });
+            return Err(self.api_error(response).await);
         }
 
         Ok(response.bytes().await?.to_vec())
@@ -372,9 +371,7 @@ impl Client {
                     self.sleep_before_retry(attempt).await;
                 }
                 Ok(response) => {
-                    let status = response.status();
-                    let body = response.text().await.unwrap_or_default();
-                    return Err(Error::Api { status, body });
+                    return Err(self.api_error(response).await);
                 }
                 Err(error) if self.should_retry_error(&error, attempt) => {
                     attempt += 1;
@@ -391,8 +388,7 @@ impl Client {
     {
         let status = response.status();
         if !status.is_success() {
-            let body = response.text().await.unwrap_or_default();
-            return Err(Error::Api { status, body });
+            return Err(self.api_error(response).await);
         }
 
         Ok(response.json::<R>().await?)
@@ -410,8 +406,7 @@ impl Client {
 
         let status = response.status();
         if !status.is_success() {
-            let body = response.text().await.unwrap_or_default();
-            return Err(Error::Api { status, body });
+            return Err(self.api_error(response).await);
         }
 
         let mut bytes = response.bytes_stream();
@@ -454,6 +449,14 @@ impl Client {
         Ok(request
             .bearer_auth(self.config.api_key())
             .headers(self.config.header_map()?))
+    }
+
+    async fn api_error(&self, response: reqwest::Response) -> Error {
+        let status = response.status();
+        let headers = response.headers().clone();
+        let body = response.text().await.unwrap_or_default();
+
+        Error::Api(ApiError::from_parts(status, &headers, body))
     }
 
     fn should_retry_error(&self, error: &reqwest::Error, attempt: usize) -> bool {

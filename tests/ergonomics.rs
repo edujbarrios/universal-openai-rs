@@ -1,6 +1,6 @@
 use serde::Deserialize;
 use universal_openai_rs::{
-    ChatChoice, ChatCompletionResponse, ChatMessage, Client, Config, EmbeddingData,
+    ApiError, ChatChoice, ChatCompletionResponse, ChatMessage, Client, Config, EmbeddingData,
     EmbeddingsResponse, Error, Provider, ResponsesResponse,
 };
 
@@ -53,6 +53,43 @@ fn custom_http_client_rejects_invalid_headers() {
     let error = Client::with_http_client(config, reqwest::Client::new()).unwrap_err();
 
     assert!(matches!(error, Error::InvalidConfig(_)));
+}
+
+#[test]
+fn api_error_extracts_openai_compatible_fields_and_request_id() {
+    let mut headers = reqwest::header::HeaderMap::new();
+    headers.insert(
+        "x-request-id",
+        reqwest::header::HeaderValue::from_static("req_123"),
+    );
+
+    let error = ApiError::from_parts(
+        reqwest::StatusCode::BAD_REQUEST,
+        &headers,
+        r#"{"error":{"type":"invalid_request_error","code":"bad_model","param":"model"}}"#,
+    );
+
+    assert_eq!(error.status, reqwest::StatusCode::BAD_REQUEST);
+    assert_eq!(error.error_type.as_deref(), Some("invalid_request_error"));
+    assert_eq!(error.code.as_deref(), Some("bad_model"));
+    assert_eq!(error.param.as_deref(), Some("model"));
+    assert_eq!(error.request_id.as_deref(), Some("req_123"));
+}
+
+#[test]
+fn api_error_keeps_raw_body_for_non_json_provider_errors() {
+    let headers = reqwest::header::HeaderMap::new();
+    let error = ApiError::from_parts(
+        reqwest::StatusCode::BAD_GATEWAY,
+        &headers,
+        "upstream down",
+    );
+
+    assert_eq!(error.body, "upstream down");
+    assert_eq!(error.error_type, None);
+    assert_eq!(error.code, None);
+    assert_eq!(error.param, None);
+    assert_eq!(error.request_id, None);
 }
 
 #[test]

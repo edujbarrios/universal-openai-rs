@@ -70,7 +70,7 @@ pub use embeddings::{
     EmbeddingData, EmbeddingInput, EmbeddingUsage, EmbeddingsRequest, EmbeddingsRequestBuilder,
     EmbeddingsResponse,
 };
-pub use error::{Error, Result};
+pub use error::{ApiError, Error, Result};
 pub use files::{
     DeletedFile, FileObject, FileUploadBuilder, Files, ListFilesResponse, UploadedFile,
 };
@@ -92,8 +92,8 @@ pub use responses::{
 
 pub mod prelude {
     pub use crate::{
-        AgentChainRun, AgentRun, AgentSpec, Agents, ChatContentPart, ChatMessage, Client, Config,
-        Error, PromptBuilder, Provider, ResponseContentPart, ResponseInput, ResponseInputItem,
-        Result, Tool,
+        AgentChainRun, AgentRun, AgentSpec, Agents, ApiError, ChatContentPart, ChatMessage, Client,
+        Config, Error, PromptBuilder, Provider, ResponseContentPart, ResponseInput,
+        ResponseInputItem, Result, Tool,
     };
 }
