@@ -7,7 +7,6 @@ async fn main() -> universal_openai_rs::Result<()> {
         .respond_text("gpt-4o-mini", "Explain provider-agnostic APIs in one sentence.")
         .await?;
 
-    println!("{}", response.output_text.unwrap_or_default());
+    println!("{}", response.text()?);
     Ok(())
 }
-

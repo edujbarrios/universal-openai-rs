@@ -13,7 +13,6 @@ async fn main() -> universal_openai_rs::Result<()> {
         .send()
         .await?;
 
-    println!("{}", response.output_text.unwrap_or_default());
+    println!("{}", response.text()?);
     Ok(())
 }
-

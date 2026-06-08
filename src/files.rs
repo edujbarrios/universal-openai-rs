@@ -21,6 +21,10 @@ impl<'a> Files<'a> {
         self.client.get_json(&format!("files/{file_id}")).await
     }
 
+    pub async fn content(&self, file_id: &str) -> Result<Vec<u8>> {
+        self.client.get_bytes(&format!("files/{file_id}/content")).await
+    }
+
     pub async fn delete(&self, file_id: &str) -> Result<DeletedFile> {
         self.client.delete_json(&format!("files/{file_id}")).await
     }
@@ -106,4 +110,3 @@ pub struct DeletedFile {
     pub object: Option<String>,
     pub deleted: bool,
 }
-

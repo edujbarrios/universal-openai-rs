@@ -154,6 +154,9 @@ let moderation = client.moderate_text("Text to classify").await?;
 Vision inputs accept image URLs or base64 data URLs such as
 `data:image/png;base64,...`.
 
+Files can be uploaded, listed, inspected, deleted, and downloaded with
+`client.files().content(file_id)`.
+
 ## Escape Hatch
 
 ```rust

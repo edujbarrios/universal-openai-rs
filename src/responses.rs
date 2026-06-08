@@ -207,15 +207,49 @@ impl<'a> ResponseRequestBuilder<'a> {
 }
 
 impl ResponsesResponse {
+    pub fn first_text(&self) -> Option<&str> {
+        self.output_text
+            .as_deref()
+            .or_else(|| self.output.as_deref().and_then(extract_text_from_output))
+    }
+
     pub fn text(self) -> Result<String> {
-        self.output_text.ok_or(Error::MissingText)
+        if let Some(output_text) = self.output_text {
+            return Ok(output_text);
+        }
+
+        self.output
+            .as_deref()
+            .and_then(extract_text_from_output)
+            .map(ToOwned::to_owned)
+            .ok_or(Error::MissingText)
     }
 
     pub fn json<T>(&self) -> Result<T>
     where
         T: serde::de::DeserializeOwned,
     {
-        let text = self.output_text.as_deref().ok_or(Error::MissingText)?;
+        let text = self.first_text().ok_or(Error::MissingText)?;
         Ok(serde_json::from_str(text)?)
     }
+}
+
+fn extract_text_from_output(output: &[Value]) -> Option<&str> {
+    for item in output {
+        if let Some(text) = item.get("text").and_then(Value::as_str) {
+            return Some(text);
+        }
+
+        let Some(content) = item.get("content").and_then(Value::as_array) else {
+            continue;
+        };
+
+        for part in content {
+            if let Some(text) = part.get("text").and_then(Value::as_str) {
+                return Some(text);
+            }
+        }
+    }
+
+    None
 }

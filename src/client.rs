@@ -296,6 +296,23 @@ impl Client {
         self.parse_response(response).await
     }
 
+    pub(crate) async fn get_bytes(&self, path: &str) -> Result<Vec<u8>> {
+        let response = self
+            .http
+            .get(self.config.endpoint(path)?)
+            .bearer_auth(self.config.api_key())
+            .send()
+            .await?;
+
+        let status = response.status();
+        if !status.is_success() {
+            let body = response.text().await.unwrap_or_default();
+            return Err(Error::Api { status, body });
+        }
+
+        Ok(response.bytes().await?.to_vec())
+    }
+
     pub(crate) async fn delete_json<R>(&self, path: &str) -> Result<R>
     where
         R: serde::de::DeserializeOwned,

@@ -57,6 +57,28 @@ fn responses_response_can_parse_output_text() {
 }
 
 #[test]
+fn responses_response_extracts_text_from_output_items() {
+    let response = ResponsesResponse {
+        id: None,
+        object: None,
+        status: None,
+        model: None,
+        output: Some(vec![serde_json::json!({
+            "type": "message",
+            "content": [{
+                "type": "output_text",
+                "text": "fallback text"
+            }]
+        })]),
+        output_text: None,
+        extra: serde_json::Map::new(),
+    };
+
+    assert_eq!(response.first_text(), Some("fallback text"));
+    assert_eq!(response.text().unwrap(), "fallback text");
+}
+
+#[test]
 fn embeddings_response_extracts_vectors() {
     let response = EmbeddingsResponse {
         object: None,
