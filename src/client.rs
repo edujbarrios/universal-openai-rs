@@ -1,7 +1,7 @@
 use crate::{
     ChatCompletionResponse, ChatRequestBuilder, ChatStream, ChatStreamEvent, Config,
     EmbeddingsRequestBuilder, EmbeddingsResponse, Error, Provider, ResponseRequestBuilder,
-    ResponsesResponse, Result,
+    ResponsesResponse, Result, PromptBuilder,
 };
 use futures_util::StreamExt;
 use std::time::Duration;
@@ -52,6 +52,10 @@ impl Client {
         ChatRequestBuilder::new(self)
     }
 
+    pub fn prompt(&self, prompt: impl Into<String>) -> PromptBuilder<'_> {
+        PromptBuilder::new(self, prompt)
+    }
+
     pub fn chat_default(&self) -> Result<ChatRequestBuilder<'_>> {
         let model = self
             .config
@@ -87,6 +91,10 @@ impl Client {
 
     pub async fn ask_default(&self, prompt: impl Into<String>) -> Result<String> {
         self.chat_default()?.user(prompt).send().await?.text()
+    }
+
+    pub(crate) fn default_model(&self) -> Option<&str> {
+        self.config.default_model()
     }
 
     pub async fn ask_json<T>(

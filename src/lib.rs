@@ -3,6 +3,7 @@ mod client;
 mod config;
 mod embeddings;
 mod error;
+mod prompt;
 mod responses;
 
 pub use chat::{
@@ -18,12 +19,14 @@ pub use embeddings::{
     EmbeddingsRequestBuilder, EmbeddingsResponse,
 };
 pub use error::{Error, Result};
+pub use prompt::PromptBuilder;
 pub use responses::{
     ResponseInput, ResponseRequestBuilder, ResponsesRequest, ResponsesResponse,
 };
 
 pub mod prelude {
     pub use crate::{
-        ChatMessage, Client, Config, Error, Provider, ResponseInput, Result, Tool,
+        ChatMessage, Client, Config, Error, PromptBuilder, Provider, ResponseInput,
+        Result, Tool,
     };
 }
