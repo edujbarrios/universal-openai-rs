@@ -23,9 +23,11 @@ jobs:
       - name: Run clippy
         run: cargo clippy --all-targets -- -D warnings
 
+      - name: Check examples
+        run: cargo check --examples
+
       - name: Run tests
         run: cargo test
 
       - name: Build docs
         run: cargo doc --no-deps
-

@@ -126,7 +126,8 @@ impl<'a> Agents<'a> {
         let mut steps = Vec::new();
 
         for agent in agents {
-            let run = self.run(&agent.into(), next_task).await?;
+            let agent_name = agent.into();
+            let run = self.run(&agent_name, next_task).await?;
             next_task = run.output.clone();
             steps.push(run);
         }

@@ -128,7 +128,7 @@ let response = client
 
 ```rust
 let text = client.ask("gpt-4o-mini", "Hello").await?;
-let json: MyType = client.ask_json("gpt-4o-mini", "Return JSON").await?;
+let json: serde_json::Value = client.ask_json("gpt-4o-mini", "Return JSON").await?;
 let vector = client.embed("text-embedding-3-small", "Embed this").await?;
 let image = client.generate_image("gpt-image-1", "A clean Rust API diagram").await?;
 let moderation = client.moderate_text("Text to classify").await?;
