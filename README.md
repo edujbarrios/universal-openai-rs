@@ -3,26 +3,32 @@
 [![CI](https://github.com/edujbarrios/universal-openai-rs/actions/workflows/ci.yml/badge.svg)](https://github.com/edujbarrios/universal-openai-rs/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-`universal-openai-rs` is a self-maintained Rust wrapper for OpenAI-compatible
-APIs.
+`universal-openai-rs` is a self-maintained wrapper for OpenAI-compatible APIs in
+Rust, optimized for simple agent-oriented workflows.
 
 The goal is straightforward: make AI API calls in Rust easy to write, easy to
-read, and still close to the OpenAI-compatible request/response format when you
-need full control.
+read, and especially easy to compose into lightweight agents, while staying
+close to the OpenAI-compatible request/response format when you need full
+control.
+
+## About
+
+A self-maintained, OpenAI-compatible APIs wrapper for Rust. Optimized for agents
+and built around a simple API surface.
 
 ## What This Project Is
 
 This is an AI engineering utility crate for:
 
+- building agent-style workflows without pulling in a heavy agent framework;
 - calling OpenAI-compatible providers from Rust;
 - keeping common workflows short with helpers like `ask`, `prompt`, and `embed`;
 - using structured builders for chat, responses, embeddings, images, audio,
   files, models, fine-tuning, moderations, and completions;
-- running lightweight native agent workflows without adding a separate agent
-  framework;
 - keeping escape hatches for provider-specific or newly released endpoints.
 
-It is designed for local development, experimentation, and open source evolution.
+It is designed for local development, experimentation, and open source evolution,
+with a strong focus on making agent usage simple.
 
 ## Install Status
 
@@ -95,8 +101,8 @@ let text = Client::from_env()?
 
 ## Native Lightweight Agents
 
-The crate includes a small native agent layer. It is intentionally lightweight:
-no scheduler, database, or external agent framework.
+Agent workflows are a first-class focus of the crate. The native agent layer is
+intentionally lightweight: no scheduler, database, or external agent framework.
 
 ```rust
 use universal_openai_rs::prelude::*;

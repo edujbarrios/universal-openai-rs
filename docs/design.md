@@ -2,7 +2,8 @@
 
 `universal-openai-rs` is designed around a simple principle:
 
-Make OpenAI-compatible API calls easy and well structured in Rust without hiding
+Make OpenAI-compatible API calls easy and well structured in Rust, with a strong
+focus on composing those calls into lightweight agent workflows without hiding
 the underlying API shape.
 
 ## Simple by Default
@@ -53,9 +54,10 @@ default models.
 
 ## Native Agent Layer
 
-The agent layer is intentionally lightweight. It does not require a separate
-runtime, database, scheduler, or framework. An agent is a named prompt policy
-that runs through the same universal OpenAI-compatible client:
+The agent layer is a first-class part of the crate's purpose. It is intentionally
+lightweight and does not require a separate runtime, database, scheduler, or
+framework. An agent is a named prompt policy that runs through the same
+universal OpenAI-compatible client:
 
 ```rust
 let agents = client

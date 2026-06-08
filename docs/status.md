@@ -2,7 +2,8 @@
 
 `universal-openai-rs` now implements the public API surface that was originally
 planned in the roadmap. The project direction is no longer a promise list; it is
-an implemented compatibility layer focused on easy, well-structured calls.
+an implemented compatibility layer focused on easy, well-structured calls and
+simple agent-oriented workflows.
 
 ## Implemented
 
