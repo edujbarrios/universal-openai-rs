@@ -1,6 +1,11 @@
 # universal-openai-rs
 
+[![CI](https://github.com/edujbarrios/universal-openai-rs/actions/workflows/ci.yml/badge.svg)](https://github.com/edujbarrios/universal-openai-rs/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 A self-maintained, OpenAI-compatible API wrapper for Rust.
+
+Simple by default. Structured when needed. Compatible by design.
 
 `universal-openai-rs` is built for one idea: keep the wire format compatible with
 the OpenAI API specification while making everyday Rust calls feel simple,
