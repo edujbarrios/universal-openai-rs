@@ -3,33 +3,35 @@
 [![CI](https://github.com/edujbarrios/universal-openai-rs/actions/workflows/ci.yml/badge.svg)](https://github.com/edujbarrios/universal-openai-rs/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-A self-maintained, OpenAI-compatible API wrapper for Rust.
+`universal-openai-rs` is a self-maintained Rust wrapper for OpenAI-compatible
+APIs.
 
-Simple by default. Structured when needed. Compatible by design.
+The goal is straightforward: make AI API calls in Rust easy to write, easy to
+read, and still close to the OpenAI-compatible request/response format when you
+need full control.
 
-`universal-openai-rs` makes easy, well-structured API calls to OpenAI-compatible
-providers while keeping the underlying API shape available.
+## What This Project Is
 
-## Why It Stands Out
+This is an AI engineering utility crate for:
 
-- Intent-first helpers: `ask`, `prompt`, `embed`, `respond_text`.
-- Native lightweight agents: `agents().agent1(task)` and `agents().sequence(...)`.
-- OpenAI-compatible builders for chat, responses, embeddings, images, audio,
-  files, models, fine-tuning, moderations, and legacy completions.
-- Provider presets for OpenAI, OpenRouter, Groq, Together, Ollama, and custom
-  OpenAI-compatible base URLs.
-- Escape hatches for new or provider-specific endpoints:
-  `send_compatible`, `get_compatible`, and `delete_compatible`.
+- calling OpenAI-compatible providers from Rust;
+- keeping common workflows short with helpers like `ask`, `prompt`, and `embed`;
+- using structured builders for chat, responses, embeddings, images, audio,
+  files, models, fine-tuning, moderations, and completions;
+- running lightweight native agent workflows without adding a separate agent
+  framework;
+- keeping escape hatches for provider-specific or newly released endpoints.
 
-## Current Install Status
+It is designed for local development, experimentation, and open source evolution.
 
-This crate is not published to crates.io yet. It is also not a Python package
-and is not available on PyPI.
+## Install Status
 
-For now, use it locally from this repository or as a Git dependency in another
-Rust project.
+This crate is not published to `crates.io` yet. It is not a Python package and
+is not available on PyPI.
 
-## Clone and Run Locally
+For now, use it as a local crate or as a Git dependency.
+
+## Clone
 
 ```bash
 git clone https://github.com/edujbarrios/universal-openai-rs.git
@@ -39,23 +41,9 @@ cd universal-openai-rs
 Repository:
 [github.com/edujbarrios/universal-openai-rs](https://github.com/edujbarrios/universal-openai-rs/tree/main)
 
-Set your environment:
+## Use From Another Rust Project
 
-```bash
-OPENAI_API_KEY=your-api-key
-OPENAI_BASE_URL=https://api.openai.com/v1
-OPENAI_MODEL=gpt-4o-mini
-```
-
-Then run an example:
-
-```bash
-cargo run --example simple
-```
-
-## Use in Another Rust Project
-
-Until the crate is published, add it from Git:
+Git dependency:
 
 ```toml
 [dependencies]
@@ -63,7 +51,7 @@ universal-openai-rs = { git = "https://github.com/edujbarrios/universal-openai-r
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 ```
 
-Or use a local path while developing:
+Local path dependency:
 
 ```toml
 [dependencies]
@@ -71,7 +59,25 @@ universal-openai-rs = { path = "../universal-openai-rs" }
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 ```
 
-In Rust code, import it as `universal_openai_rs`.
+Import it in Rust as:
+
+```rust
+use universal_openai_rs::prelude::*;
+```
+
+## Environment
+
+`Client::from_env()` reads:
+
+```bash
+OPENAI_API_KEY=your-api-key
+OPENAI_BASE_URL=https://api.openai.com/v1
+OPENAI_MODEL=gpt-4o-mini
+```
+
+`OPENAI_BASE_URL` and `OPENAI_MODEL` are optional. For local or hosted
+OpenAI-compatible providers, set `OPENAI_BASE_URL` to the provider's `/v1` base
+URL.
 
 ## Quick Start
 
@@ -88,13 +94,10 @@ async fn main() -> universal_openai_rs::Result<()> {
 }
 ```
 
-`Client::from_env()` reads:
-
-- `OPENAI_API_KEY`
-- `OPENAI_BASE_URL`, optional
-- `OPENAI_MODEL`, optional
-
 ## Prompt-First API
+
+Use `prompt(...)` when you want readable application code without manually
+constructing chat messages.
 
 ```rust
 use universal_openai_rs::prelude::*;
@@ -107,7 +110,10 @@ let text = Client::from_env()?
     .await?;
 ```
 
-## Native Agents
+## Native Lightweight Agents
+
+The crate includes a small native agent layer. It is intentionally lightweight:
+no scheduler, database, or external agent framework.
 
 ```rust
 use universal_openai_rs::prelude::*;
@@ -134,8 +140,8 @@ let reviewed = agents.agent2(review_task).await?;
 println!("{}", reviewed.output);
 ```
 
-For simple pipelines, `sequence(...)` runs agents in order and passes each
-output to the next agent:
+For simple pipelines, `sequence(...)` runs agents in order and passes each output
+to the next agent:
 
 ```rust
 let run = agents
@@ -143,17 +149,10 @@ let run = agents
     .await?;
 ```
 
-## Provider-Agnostic Usage
-
-```rust
-use universal_openai_rs::{Client, Provider};
-
-let openrouter = Client::for_provider("your-api-key", Provider::OpenRouter)?;
-let ollama = Client::for_provider("ollama", Provider::Ollama)?;
-let custom = Client::compatible("your-api-key", "https://api.example.com/v1")?;
-```
-
 ## Structured Builders
+
+Use builders when you want a request shape that stays close to the
+OpenAI-compatible API.
 
 ```rust
 let response = client
@@ -166,6 +165,16 @@ let response = client
     .await?;
 ```
 
+## Provider-Agnostic Clients
+
+```rust
+use universal_openai_rs::{Client, Provider};
+
+let openrouter = Client::for_provider("your-api-key", Provider::OpenRouter)?;
+let ollama = Client::for_provider("ollama", Provider::Ollama)?;
+let custom = Client::compatible("your-api-key", "https://api.example.com/v1")?;
+```
+
 ## Common Workflows
 
 ```rust
@@ -175,6 +184,15 @@ let vector = client.embed("text-embedding-3-small", "Embed this").await?;
 let image = client.generate_image("gpt-image-1", "A clean Rust API diagram").await?;
 let moderation = client.moderate_text("Text to classify").await?;
 ```
+
+Vision inputs support image URLs and base64 data URLs such as:
+
+```text
+data:image/png;base64,...
+```
+
+Files can be uploaded, listed, inspected, deleted, and downloaded with
+`client.files().content(file_id)`.
 
 ## Endpoint Coverage
 
@@ -193,19 +211,10 @@ let moderation = client.moderate_text("Text to classify").await?;
 | Agents | `client.agents()` |
 | Engines | Legacy only via compatibility escape hatches |
 
-Vision inputs accept image URLs or base64 data URLs such as
-`data:image/png;base64,...`.
+## Escape Hatches
 
-Files can be uploaded, listed, inspected, deleted, and downloaded with
-`client.files().content(file_id)`.
-
-## Known Issues
-
-This is an early local/Git dependency. Common issues are missing `cargo`, missing
-`OPENAI_API_KEY`, provider-specific fields, and non-standard streaming formats.
-See [docs/known-issues.md](docs/known-issues.md).
-
-## Escape Hatch
+If a provider supports an endpoint or option before this crate exposes a typed
+builder, use the compatibility methods.
 
 ```rust
 use serde_json::{json, Value};
@@ -221,19 +230,36 @@ let response: Value = client
     .await?;
 ```
 
+Available escape hatches:
+
+- `send_compatible(...)`
+- `get_compatible(...)`
+- `delete_compatible(...)`
+- `.extra(...)` on builders for provider-specific fields
+
+## Current Caveats
+
+This project is early. Known issue areas include provider-specific response
+shapes, non-standard streaming formats, large multipart uploads, and legacy
+`Engines` compatibility.
+
+See [docs/known-issues.md](docs/known-issues.md).
+
 ## Checks
 
 ```bash
 cargo fmt --check
 cargo clippy --all-targets -- -D warnings
+cargo check --examples
 cargo test
 cargo doc --no-deps
 ```
 
-## More
+## Project Docs
 
 - [Design philosophy](docs/design.md)
 - [Provider compatibility](docs/providers.md)
 - [Known issues](docs/known-issues.md)
 - [Implemented coverage](docs/status.md)
 - [Examples](examples/README.md)
+
