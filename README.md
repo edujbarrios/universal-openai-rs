@@ -21,6 +21,16 @@ providers while keeping the underlying API shape available.
 - Escape hatches for new or provider-specific endpoints:
   `send_compatible`, `get_compatible`, and `delete_compatible`.
 
+## Clone
+
+```bash
+git clone https://github.com/edujbarrios/universal-openai-rs.git
+cd universal-openai-rs
+```
+
+Repository:
+[github.com/edujbarrios/universal-openai-rs](https://github.com/edujbarrios/universal-openai-rs/tree/main)
+
 ## Quick Start
 
 ```rust
