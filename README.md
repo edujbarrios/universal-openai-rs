@@ -21,7 +21,15 @@ providers while keeping the underlying API shape available.
 - Escape hatches for new or provider-specific endpoints:
   `send_compatible`, `get_compatible`, and `delete_compatible`.
 
-## Clone
+## Current Install Status
+
+This crate is not published to crates.io yet. It is also not a Python package
+and is not available on PyPI.
+
+For now, use it locally from this repository or as a Git dependency in another
+Rust project.
+
+## Clone and Run Locally
 
 ```bash
 git clone https://github.com/edujbarrios/universal-openai-rs.git
@@ -30,6 +38,40 @@ cd universal-openai-rs
 
 Repository:
 [github.com/edujbarrios/universal-openai-rs](https://github.com/edujbarrios/universal-openai-rs/tree/main)
+
+Set your environment:
+
+```bash
+OPENAI_API_KEY=your-api-key
+OPENAI_BASE_URL=https://api.openai.com/v1
+OPENAI_MODEL=gpt-4o-mini
+```
+
+Then run an example:
+
+```bash
+cargo run --example simple
+```
+
+## Use in Another Rust Project
+
+Until the crate is published, add it from Git:
+
+```toml
+[dependencies]
+universal-openai-rs = { git = "https://github.com/edujbarrios/universal-openai-rs.git" }
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+```
+
+Or use a local path while developing:
+
+```toml
+[dependencies]
+universal-openai-rs = { path = "../universal-openai-rs" }
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+```
+
+In Rust code, import it as `universal_openai_rs`.
 
 ## Quick Start
 
