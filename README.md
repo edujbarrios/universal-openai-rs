@@ -27,6 +27,21 @@ developer's intent:
 It is open source from the beginning and maintained under the GitHub identity
 `edujbarrios` by Eduardo J. Barrios.
 
+## Open Source Readiness
+
+This repository is intended to be open source from the start. It includes CI,
+tests, examples, contribution notes, security reporting, release notes, and a
+small public API surface designed to be reviewed and extended.
+
+Before publishing or opening a pull request, run:
+
+```bash
+cargo fmt --check
+cargo clippy --all-targets -- -D warnings
+cargo test
+cargo doc --no-deps
+```
+
 ## Goals
 
 - Simple calls for common LLM workflows.
@@ -430,4 +445,5 @@ output, tool calling, retries, timeouts, and provider-specific extension fields.
 
 See [docs/design.md](docs/design.md) for the design philosophy and
 [docs/providers.md](docs/providers.md) for provider compatibility notes. See
-[docs/status.md](docs/status.md) for implemented coverage.
+[docs/status.md](docs/status.md) for implemented coverage. See
+[docs/release-checklist.md](docs/release-checklist.md) before publishing.

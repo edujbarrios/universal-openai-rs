@@ -15,7 +15,9 @@ Run the standard checks before opening a pull request:
 
 ```bash
 cargo fmt
+cargo clippy --all-targets -- -D warnings
 cargo test
+cargo doc --no-deps
 ```
 
 ## API Design
