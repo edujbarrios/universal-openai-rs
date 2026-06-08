@@ -13,6 +13,7 @@ path first, then reveal lower-level OpenAI-compatible control only when needed.
 | `vision_chat.rs` | Vision/multimodal chat content |
 | `embeddings.rs` | One-call embeddings |
 | `responses.rs` | Responses API helper |
+| `responses_multimodal.rs` | Multimodal Responses API input |
 | `structured_output.rs` | Explicit JSON schema output |
 | `typed_json.rs` | Typed JSON parsing into a Rust struct |
 | `tool_calling.rs` | Function tool definitions |
