@@ -31,7 +31,49 @@ pub struct ResponsesRequest {
 #[serde(untagged)]
 pub enum ResponseInput {
     Text(String),
-    Items(Vec<Value>),
+    Items(Vec<ResponseInputItem>),
+    RawItems(Vec<Value>),
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ResponseInputItem {
+    #[serde(rename = "type")]
+    pub kind: String,
+    pub role: String,
+    pub content: Vec<ResponseContentPart>,
+}
+
+impl ResponseInputItem {
+    pub fn message(role: impl Into<String>, content: Vec<ResponseContentPart>) -> Self {
+        Self {
+            kind: "message".to_string(),
+            role: role.into(),
+            content,
+        }
+    }
+
+    pub fn user(content: Vec<ResponseContentPart>) -> Self {
+        Self::message("user", content)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum ResponseContentPart {
+    InputText { text: String },
+    InputImage { image_url: String },
+}
+
+impl ResponseContentPart {
+    pub fn text(text: impl Into<String>) -> Self {
+        Self::InputText { text: text.into() }
+    }
+
+    pub fn image_url(image_url: impl Into<String>) -> Self {
+        Self::InputImage {
+            image_url: image_url.into(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -86,7 +128,17 @@ impl<'a> ResponseRequestBuilder<'a> {
     }
 
     pub fn input_items(mut self, items: Vec<Value>) -> Self {
+        self.input = Some(ResponseInput::RawItems(items));
+        self
+    }
+
+    pub fn input_messages(mut self, items: Vec<ResponseInputItem>) -> Self {
         self.input = Some(ResponseInput::Items(items));
+        self
+    }
+
+    pub fn user_parts(mut self, parts: Vec<ResponseContentPart>) -> Self {
+        self.input = Some(ResponseInput::Items(vec![ResponseInputItem::user(parts)]));
         self
     }
 

@@ -89,12 +89,14 @@ pub use audio::{
 };
 pub use prompt::PromptBuilder;
 pub use responses::{
-    ResponseInput, ResponseRequestBuilder, ResponsesRequest, ResponsesResponse,
+    ResponseContentPart, ResponseInput, ResponseInputItem, ResponseRequestBuilder,
+    ResponsesRequest, ResponsesResponse,
 };
 
 pub mod prelude {
     pub use crate::{
         ChatContentPart, ChatMessage, Client, Config, Error, PromptBuilder,
-        Provider, ResponseInput, Result, Tool,
+        Provider, ResponseContentPart, ResponseInput, ResponseInputItem, Result,
+        Tool,
     };
 }

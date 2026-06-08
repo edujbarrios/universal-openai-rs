@@ -1,5 +1,5 @@
 use serde_json::json;
-use universal_openai_rs::{Client, Config, Tool};
+use universal_openai_rs::{Client, Config, ResponseContentPart, Tool};
 
 #[test]
 fn builds_embeddings_request() {
@@ -21,6 +21,27 @@ fn builds_embeddings_request() {
             "dimensions": 512
         })
     );
+}
+
+#[test]
+fn builds_multimodal_responses_request() {
+    let client = Client::new(Config::new("test-key")).unwrap();
+
+    let request = client
+        .responses()
+        .model("gpt-4o-mini")
+        .user_parts(vec![
+            ResponseContentPart::text("Describe this image."),
+            ResponseContentPart::image_url("https://example.com/image.png"),
+        ])
+        .build()
+        .unwrap();
+
+    let serialized = serde_json::to_value(request).unwrap();
+
+    assert_eq!(serialized["input"][0]["type"], "message");
+    assert_eq!(serialized["input"][0]["content"][0]["type"], "input_text");
+    assert_eq!(serialized["input"][0]["content"][1]["type"], "input_image");
 }
 
 #[test]
@@ -66,4 +87,3 @@ fn builds_responses_request_with_schema_and_tool() {
         "invoice_summary"
     );
 }
-
