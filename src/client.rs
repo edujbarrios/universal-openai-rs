@@ -1,10 +1,9 @@
 use crate::{
-    AgentSpec, Agents,
-    ChatCompletionResponse, ChatRequestBuilder, ChatStream, ChatStreamEvent, Config,
-    CompletionRequestBuilder, CompletionResponse, EmbeddingsRequestBuilder,
-    EmbeddingsResponse, Error, FileUploadBuilder, Files, FineTuning, ImagesRequestBuilder,
-    Models, ModerationRequestBuilder, Provider, ResponseRequestBuilder, ResponsesResponse,
-    Result, Audio, PromptBuilder,
+    AgentSpec, Agents, Audio, ChatCompletionResponse, ChatRequestBuilder, ChatStream,
+    ChatStreamEvent, CompletionRequestBuilder, CompletionResponse, Config, EmbeddingsRequestBuilder,
+    EmbeddingsResponse, Error, FileUploadBuilder, Files, FineTuning, ImagesRequestBuilder, Models,
+    ModerationRequestBuilder, PromptBuilder, Provider, ResponseRequestBuilder, ResponsesResponse,
+    Result,
 };
 use futures_util::StreamExt;
 use std::time::Duration;

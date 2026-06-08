@@ -116,4 +116,3 @@ impl<'a> PromptBuilder<'a> {
         self.into_chat()?.stream_text().await
     }
 }
-

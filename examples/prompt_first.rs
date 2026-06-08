@@ -13,4 +13,3 @@ async fn main() -> Result<()> {
     println!("{text}");
     Ok(())
 }
-

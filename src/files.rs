@@ -22,7 +22,9 @@ impl<'a> Files<'a> {
     }
 
     pub async fn content(&self, file_id: &str) -> Result<Vec<u8>> {
-        self.client.get_bytes(&format!("files/{file_id}/content")).await
+        self.client
+            .get_bytes(&format!("files/{file_id}/content"))
+            .await
     }
 
     pub async fn delete(&self, file_id: &str) -> Result<DeletedFile> {

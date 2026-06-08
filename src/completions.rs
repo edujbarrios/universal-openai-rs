@@ -134,4 +134,3 @@ impl<'a> CompletionRequestBuilder<'a> {
         self.client.post_json("completions", &request).await
     }
 }
-

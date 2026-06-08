@@ -12,4 +12,3 @@ async fn main() -> universal_openai_rs::Result<()> {
     println!("{}", file.id);
     Ok(())
 }
-

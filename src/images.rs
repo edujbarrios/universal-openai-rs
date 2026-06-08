@@ -122,4 +122,3 @@ impl<'a> ImagesRequestBuilder<'a> {
         self.client.post_json("images/generations", &request).await
     }
 }
-

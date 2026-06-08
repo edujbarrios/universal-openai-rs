@@ -29,7 +29,10 @@ impl<'a> FineTuning<'a> {
 
     pub async fn cancel(&self, job_id: &str) -> Result<FineTuningJob> {
         self.client
-            .post_json(&format!("fine_tuning/jobs/{job_id}/cancel"), &serde_json::json!({}))
+            .post_json(
+                &format!("fine_tuning/jobs/{job_id}/cancel"),
+                &serde_json::json!({}),
+            )
             .await
     }
 }
@@ -51,7 +54,6 @@ pub struct FineTuningJobRequest {
     #[serde(flatten)]
     pub extra: serde_json::Map<String, Value>,
 }
-
 #[derive(Debug, Clone)]
 pub struct FineTuningJobRequestBuilder<'a> {
     client: &'a Client,
@@ -151,4 +153,3 @@ pub struct FineTuningJob {
     #[serde(flatten)]
     pub extra: serde_json::Map<String, Value>,
 }
-

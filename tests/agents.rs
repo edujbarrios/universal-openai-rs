@@ -43,7 +43,11 @@ fn agents_registry_stores_named_specs() {
     let agents = client
         .agents()
         .simple("agent1", "Answer as a practical engineer.")
-        .add(client.agent("agent2").instructions("Review the answer critically."));
+        .add(
+            client
+                .agent("agent2")
+                .instructions("Review the answer critically."),
+        );
 
     assert_eq!(
         agents.get("agent1").unwrap().instructions.as_deref(),

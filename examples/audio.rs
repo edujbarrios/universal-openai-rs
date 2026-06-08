@@ -14,4 +14,3 @@ async fn main() -> universal_openai_rs::Result<()> {
     println!("{}", transcript.text.unwrap_or_default());
     Ok(())
 }
-

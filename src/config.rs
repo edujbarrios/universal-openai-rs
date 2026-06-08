@@ -47,8 +47,8 @@ impl Config {
     }
 
     pub fn from_env() -> Result<Self> {
-        let api_key = std::env::var("OPENAI_API_KEY")
-            .map_err(|_| Error::MissingEnv("OPENAI_API_KEY"))?;
+        let api_key =
+            std::env::var("OPENAI_API_KEY").map_err(|_| Error::MissingEnv("OPENAI_API_KEY"))?;
         let base_url =
             std::env::var("OPENAI_BASE_URL").unwrap_or_else(|_| DEFAULT_BASE_URL.to_string());
         let default_model = std::env::var("OPENAI_MODEL").ok();
@@ -66,11 +66,7 @@ impl Config {
     }
 
     pub fn with_base_url(mut self, base_url: impl Into<String>) -> Self {
-        self.base_url = base_url
-            .into()
-            .trim()
-            .trim_end_matches('/')
-            .to_string();
+        self.base_url = base_url.into().trim().trim_end_matches('/').to_string();
         self
     }
 
@@ -119,6 +115,10 @@ impl Config {
             return Err(Error::InvalidConfig("base URL cannot be empty".to_string()));
         }
 
-        Ok(format!("{}/{}", self.base_url, path.trim_start_matches('/')))
+        Ok(format!(
+            "{}/{}",
+            self.base_url,
+            path.trim_start_matches('/')
+        ))
     }
 }

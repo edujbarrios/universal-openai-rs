@@ -36,10 +36,12 @@
 //! # }
 //! ```
 
+mod agents;
+mod audio;
 mod chat;
 mod client;
-mod config;
 mod completions;
+mod config;
 mod embeddings;
 mod error;
 mod files;
@@ -47,28 +49,26 @@ mod fine_tuning;
 mod images;
 mod models;
 mod moderations;
-mod audio;
-mod agents;
 mod prompt;
 mod responses;
 
 pub use agents::{AgentChainRun, AgentRun, AgentSpec, Agents};
+pub use audio::{Audio, AudioResponse, TranscriptionBuilder, TranslationBuilder};
 pub use chat::{
-    ChatChoice, ChatCompletionRequest, ChatCompletionResponse, ChatContent,
-    ChatContentPart, ChatMessage, ChatRequestBuilder, ChatRole, ChatStream,
-    ChatStreamChoice, ChatStreamDelta, ChatStreamEvent, ChatStreamToolCall,
-    ChatStreamToolCallFunction, FunctionTool, ImageUrl, Tool, ToolCall,
-    ToolCallFunction, Usage,
+    ChatChoice, ChatCompletionRequest, ChatCompletionResponse, ChatContent, ChatContentPart,
+    ChatMessage, ChatRequestBuilder, ChatRole, ChatStream, ChatStreamChoice, ChatStreamDelta,
+    ChatStreamEvent, ChatStreamToolCall, ChatStreamToolCallFunction, FunctionTool, ImageUrl, Tool,
+    ToolCall, ToolCallFunction, Usage,
 };
 pub use client::Client;
-pub use config::{Config, Provider};
 pub use completions::{
     CompletionChoice, CompletionPrompt, CompletionRequest, CompletionRequestBuilder,
     CompletionResponse,
 };
+pub use config::{Config, Provider};
 pub use embeddings::{
-    EmbeddingData, EmbeddingInput, EmbeddingUsage, EmbeddingsRequest,
-    EmbeddingsRequestBuilder, EmbeddingsResponse,
+    EmbeddingData, EmbeddingInput, EmbeddingUsage, EmbeddingsRequest, EmbeddingsRequestBuilder,
+    EmbeddingsResponse,
 };
 pub use error::{Error, Result};
 pub use files::{
@@ -78,16 +78,11 @@ pub use fine_tuning::{
     FineTuning, FineTuningJob, FineTuningJobRequest, FineTuningJobRequestBuilder,
     ListFineTuningJobsResponse,
 };
-pub use images::{
-    ImageData, ImageGenerationRequest, ImageResponse, ImagesRequestBuilder,
-};
+pub use images::{ImageData, ImageGenerationRequest, ImageResponse, ImagesRequestBuilder};
 pub use models::{DeletedModel, ListModelsResponse, Model, Models};
 pub use moderations::{
-    ModerationCategoryScores, ModerationInput, ModerationRequest,
-    ModerationRequestBuilder, ModerationResponse, ModerationResult,
-};
-pub use audio::{
-    Audio, AudioResponse, TranscriptionBuilder, TranslationBuilder,
+    ModerationCategoryScores, ModerationInput, ModerationRequest, ModerationRequestBuilder,
+    ModerationResponse, ModerationResult,
 };
 pub use prompt::PromptBuilder;
 pub use responses::{
@@ -97,8 +92,8 @@ pub use responses::{
 
 pub mod prelude {
     pub use crate::{
-        AgentChainRun, AgentRun, AgentSpec, Agents, ChatContentPart, ChatMessage, Client,
-        Config, Error, PromptBuilder, Provider, ResponseContentPart,
-        ResponseInput, ResponseInputItem, Result, Tool,
+        AgentChainRun, AgentRun, AgentSpec, Agents, ChatContentPart, ChatMessage, Client, Config,
+        Error, PromptBuilder, Provider, ResponseContentPart, ResponseInput, ResponseInputItem,
+        Result, Tool,
     };
 }

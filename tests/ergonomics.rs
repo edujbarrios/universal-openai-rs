@@ -1,7 +1,7 @@
 use serde::Deserialize;
 use universal_openai_rs::{
-    ChatChoice, ChatCompletionResponse, ChatMessage, EmbeddingData, EmbeddingsResponse,
-    Config, Provider, ResponsesResponse,
+    ChatChoice, ChatCompletionResponse, ChatMessage, Config, EmbeddingData, EmbeddingsResponse,
+    Provider, ResponsesResponse,
 };
 
 #[derive(Debug, Deserialize, PartialEq, Eq)]

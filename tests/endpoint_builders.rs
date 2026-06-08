@@ -83,4 +83,3 @@ fn builds_fine_tuning_job_request() {
     assert_eq!(serialized["training_file"], "file-train");
     assert_eq!(serialized["hyperparameters"]["n_epochs"], 2);
 }
-

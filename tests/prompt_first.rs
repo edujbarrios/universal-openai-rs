@@ -60,4 +60,3 @@ fn prompt_builder_can_attach_schema_and_tools() {
         "packing_advice"
     );
 }
-

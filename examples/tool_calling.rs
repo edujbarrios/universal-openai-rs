@@ -25,4 +25,3 @@ async fn main() -> universal_openai_rs::Result<()> {
     println!("{response:#?}");
     Ok(())
 }
-

@@ -45,4 +45,3 @@ pub struct DeletedModel {
     pub object: Option<String>,
     pub deleted: bool,
 }
-

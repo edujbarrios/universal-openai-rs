@@ -1,6 +1,6 @@
+use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use futures_util::StreamExt;
 use std::pin::Pin;
 
 use crate::{Client, Error, Result};

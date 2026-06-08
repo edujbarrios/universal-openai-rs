@@ -13,4 +13,3 @@ fn default_model_preloads_chat_builder() {
 
     assert_eq!(request.model, "gpt-4o-mini");
 }
-

@@ -11,4 +11,3 @@ async fn main() -> universal_openai_rs::Result<()> {
 
     Ok(())
 }
-

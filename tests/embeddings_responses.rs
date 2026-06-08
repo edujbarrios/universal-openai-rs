@@ -82,8 +82,5 @@ fn builds_responses_request_with_schema_and_tool() {
 
     assert_eq!(serialized["model"], "gpt-4o-mini");
     assert_eq!(serialized["tools"][0]["function"]["name"], "lookup_invoice");
-    assert_eq!(
-        serialized["text"]["format"]["name"],
-        "invoice_summary"
-    );
+    assert_eq!(serialized["text"]["format"]["name"], "invoice_summary");
 }

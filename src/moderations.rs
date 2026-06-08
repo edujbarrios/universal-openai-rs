@@ -105,4 +105,3 @@ impl<'a> ModerationRequestBuilder<'a> {
         self.client.post_json("moderations", &request).await
     }
 }
-

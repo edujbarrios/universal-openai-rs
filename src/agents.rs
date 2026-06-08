@@ -112,11 +112,7 @@ impl<'a> Agents<'a> {
         self.run_spec(spec, task).await
     }
 
-    pub async fn sequence<I, S>(
-        &self,
-        agents: I,
-        task: impl Into<String>,
-    ) -> Result<AgentChainRun>
+    pub async fn sequence<I, S>(&self, agents: I, task: impl Into<String>) -> Result<AgentChainRun>
     where
         I: IntoIterator<Item = S>,
         S: Into<String>,
@@ -139,11 +135,7 @@ impl<'a> Agents<'a> {
         })
     }
 
-    pub async fn run_spec(
-        &self,
-        spec: AgentSpec,
-        task: impl Into<String>,
-    ) -> Result<AgentRun> {
+    pub async fn run_spec(&self, spec: AgentSpec, task: impl Into<String>) -> Result<AgentRun> {
         let task = task.into();
         let model = spec
             .model

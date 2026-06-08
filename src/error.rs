@@ -23,5 +23,8 @@ pub enum Error {
     Json(#[from] serde_json::Error),
 
     #[error("provider returned an unsuccessful response: {status} {body}")]
-    Api { status: reqwest::StatusCode, body: String },
+    Api {
+        status: reqwest::StatusCode,
+        body: String,
+    },
 }

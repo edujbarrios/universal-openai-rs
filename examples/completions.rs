@@ -10,4 +10,3 @@ async fn main() -> universal_openai_rs::Result<()> {
     println!("{}", response.first_text().unwrap_or_default());
     Ok(())
 }
-

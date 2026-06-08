@@ -15,4 +15,3 @@ async fn main() -> universal_openai_rs::Result<()> {
     println!("images: {}", image.data.len());
     Ok(())
 }
-
