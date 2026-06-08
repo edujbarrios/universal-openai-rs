@@ -6,7 +6,18 @@ A self-maintained, OpenAI-compatible API wrapper for Rust.
 the OpenAI API specification while making everyday Rust calls feel simple,
 predictable, and provider-agnostic.
 
-The design is simple by default and spec-compatible when needed.
+The intention of this repo is to make easy, well-structured API calls for
+OpenAI-compatible APIs. The design is simple by default and spec-compatible when
+needed.
+
+Most Rust SDKs start from the endpoint. `universal-openai-rs` starts from the
+developer's intent:
+
+- `ask(...)` for one-line text generation.
+- `prompt(...)` for a readable prompt-first workflow.
+- `chat()` when you want full OpenAI-compatible chat completions.
+- `responses()` and `embeddings()` for newer API surfaces.
+- `send_compatible(...)` when a provider adds a feature before the crate does.
 
 It is open source from the beginning and maintained under the GitHub identity
 `edujbarrios` by Eduardo J. Barrios.
@@ -22,6 +33,32 @@ It is open source from the beginning and maintained under the GitHub identity
 - Async-first HTTP client using `reqwest`.
 - Small, readable API surface that is easy to maintain.
 
+## What Makes It Different
+
+`universal-openai-rs` is not trying to hide the OpenAI-compatible spec. It keeps
+that shape available, but wraps it with a Rust-friendly experience:
+
+- Intent-first calls: `ask`, `ask_json`, `prompt`, `embed`, and `respond_text`.
+- Spec builders: `chat`, `responses`, and `embeddings` map cleanly to provider
+  JSON.
+- Provider presets for common OpenAI-compatible APIs.
+- A raw compatibility escape hatch for endpoints and provider options that are
+  not typed yet.
+- Typed structured output helpers without forcing a framework.
+- Small public types that are easy to inspect, serialize, test, and extend.
+
+## API Surface
+
+| Need | Simple API | Structured API |
+| --- | --- | --- |
+| Text generation | `client.ask(...)` | `client.chat().send()` |
+| Prompt workflow | `client.prompt(...).run_text()` | `client.prompt(...).into_chat()` |
+| Typed JSON | `client.ask_json::<T>(...)` | `.json_schema(...).send()` |
+| Streaming | `.stream_text()` | `.stream()` |
+| Embeddings | `client.embed(...)` | `client.embeddings().send()` |
+| Responses API | `client.respond_text(...)` | `client.responses().send()` |
+| Provider-specific fields | `.extra(...)` | `.send_compatible(...)` |
+
 ## Quick Start
 
 For the shortest common path:
@@ -33,6 +70,26 @@ use universal_openai_rs::Client;
 async fn main() -> universal_openai_rs::Result<()> {
     let client = Client::from_env()?;
     let text = client.ask("gpt-4o-mini", "Write one sentence about Rust.").await?;
+
+    println!("{text}");
+    Ok(())
+}
+```
+
+For a more expressive prompt-first workflow:
+
+```rust
+use universal_openai_rs::prelude::*;
+
+#[tokio::main]
+async fn main() -> Result<()> {
+    let client = Client::from_env()?;
+    let text = client
+        .prompt("Explain why Rust is useful for AI API clients.")
+        .model("gpt-4o-mini")
+        .system("Answer in one practical sentence.")
+        .run_text()
+        .await?;
 
     println!("{text}");
     Ok(())
@@ -158,6 +215,16 @@ let profile: EngineerProfile = client
     .await?;
 ```
 
+Prompt-first structured output is available too:
+
+```rust
+let profile: EngineerProfile = client
+    .prompt("Return a compact profile for an AI engineer.")
+    .model("gpt-4o-mini")
+    .run_json()
+    .await?;
+```
+
 When you want to pass an explicit JSON schema:
 
 ```rust
@@ -247,3 +314,5 @@ now covers chat completions, streaming, embeddings, Responses API, structured
 output, tool calling, retries, timeouts, and provider-specific extension fields.
 
 See [ROADMAP.md](ROADMAP.md) for the public development path.
+
+See [docs/design.md](docs/design.md) for the design philosophy.
