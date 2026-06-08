@@ -55,5 +55,5 @@ let response = client
     .await?;
 ```
 
-Use `send_compatible(...)` when the endpoint itself is not typed yet.
-
+Use `send_compatible(...)`, `get_compatible(...)`, or `delete_compatible(...)`
+when the endpoint itself is not typed yet.

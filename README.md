@@ -59,6 +59,7 @@ that shape available, but wraps it with a Rust-friendly experience:
 | Text generation | `client.ask(...)` | `client.chat().send()` |
 | Prompt workflow | `client.prompt(...).run_text()` | `client.prompt(...).into_chat()` |
 | Typed JSON | `client.ask_json::<T>(...)` | `.json_schema(...).send()` |
+| Vision chat | `.user_parts(...)` | `ChatContentPart::image_url(...)` |
 | Streaming | `.stream_text()` | `.stream()` |
 | Embeddings | `client.embed(...)` | `client.embeddings().send()` |
 | Responses API | `client.respond_text(...)` | `client.responses().send()` |
@@ -198,6 +199,22 @@ while let Some(event) = stream.next().await {
         }
     }
 }
+```
+
+## Vision and Multimodal Chat
+
+```rust
+use universal_openai_rs::{ChatContentPart, Client};
+
+let response = client
+    .chat()
+    .model("gpt-4o-mini")
+    .user_parts(vec![
+        ChatContentPart::text("Describe this image in one sentence."),
+        ChatContentPart::image_url("https://example.com/image.png"),
+    ])
+    .send()
+    .await?;
 ```
 
 ## Embeddings
@@ -340,6 +357,13 @@ let response: Value = client
         }),
     )
     .await?;
+```
+
+GET and DELETE escape hatches are available too:
+
+```rust
+let model: serde_json::Value = client.get_compatible("models/gpt-4o-mini").await?;
+let deleted: serde_json::Value = client.delete_compatible("models/custom-model").await?;
 ```
 
 This is also the intended path for legacy `Engines` endpoints.

@@ -10,6 +10,7 @@ path first, then reveal lower-level OpenAI-compatible control only when needed.
 | `prompt_first.rs` | The prompt-first workflow |
 | `chat.rs` | Full chat completions builder |
 | `streaming.rs` | Streaming chat events |
+| `vision_chat.rs` | Vision/multimodal chat content |
 | `embeddings.rs` | One-call embeddings |
 | `responses.rs` | Responses API helper |
 | `structured_output.rs` | Explicit JSON schema output |

@@ -59,7 +59,8 @@ three layers:
 
 - First-class typed builders for common workflows.
 - `extra(...)` fields for provider-specific JSON options.
-- `send_compatible(...)` for new or unusual endpoints.
+- `send_compatible(...)`, `get_compatible(...)`, and `delete_compatible(...)`
+  for new or unusual endpoints.
 
 The goal is to avoid provider lock-in while keeping normal calls clean.
 
@@ -70,4 +71,3 @@ The goal is to avoid provider lock-in while keeping normal calls clean.
 - Keep raw JSON access available where providers move faster than SDKs.
 - Add examples for real workflows, not only isolated endpoints.
 - Keep the crate understandable to contributors.
-
