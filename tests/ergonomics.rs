@@ -73,4 +73,3 @@ fn embeddings_response_extracts_vectors() {
 
     assert_eq!(response.first_vector().unwrap(), vec![0.1, 0.2, 0.3]);
 }
-

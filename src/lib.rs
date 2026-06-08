@@ -9,7 +9,8 @@
 //!   [`Client::embed`].
 //! - Spec-shaped builders such as [`Client::chat`], [`Client::responses`], and
 //!   [`Client::embeddings`].
-//! - A raw compatibility escape hatch through [`Client::send_compatible`].
+//! - Raw compatibility escape hatches through [`Client::send_compatible`],
+//!   [`Client::get_compatible`], and [`Client::delete_compatible`].
 //!
 //! ```no_run
 //! use universal_openai_rs::Client;
@@ -51,10 +52,11 @@ mod prompt;
 mod responses;
 
 pub use chat::{
-    ChatChoice, ChatCompletionRequest, ChatCompletionResponse, ChatMessage,
-    ChatRequestBuilder, ChatRole, ChatStream, ChatStreamChoice, ChatStreamDelta,
-    ChatStreamEvent, ChatStreamToolCall, ChatStreamToolCallFunction, FunctionTool,
-    Tool, ToolCall, ToolCallFunction, Usage,
+    ChatChoice, ChatCompletionRequest, ChatCompletionResponse, ChatContent,
+    ChatContentPart, ChatMessage, ChatRequestBuilder, ChatRole, ChatStream,
+    ChatStreamChoice, ChatStreamDelta, ChatStreamEvent, ChatStreamToolCall,
+    ChatStreamToolCallFunction, FunctionTool, ImageUrl, Tool, ToolCall,
+    ToolCallFunction, Usage,
 };
 pub use client::Client;
 pub use config::{Config, Provider};
@@ -92,7 +94,7 @@ pub use responses::{
 
 pub mod prelude {
     pub use crate::{
-        ChatMessage, Client, Config, Error, PromptBuilder, Provider, ResponseInput,
-        Result, Tool,
+        ChatContentPart, ChatMessage, Client, Config, Error, PromptBuilder,
+        Provider, ResponseInput, Result, Tool,
     };
 }

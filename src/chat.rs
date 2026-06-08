@@ -19,7 +19,7 @@ pub enum ChatRole {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ChatMessage {
     pub role: ChatRole,
-    pub content: String,
+    pub content: ChatContent,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tool_call_id: Option<String>,
@@ -32,7 +32,7 @@ impl ChatMessage {
     pub fn system(content: impl Into<String>) -> Self {
         Self {
             role: ChatRole::System,
-            content: content.into(),
+            content: ChatContent::text(content),
             tool_call_id: None,
             tool_calls: None,
         }
@@ -41,7 +41,7 @@ impl ChatMessage {
     pub fn user(content: impl Into<String>) -> Self {
         Self {
             role: ChatRole::User,
-            content: content.into(),
+            content: ChatContent::text(content),
             tool_call_id: None,
             tool_calls: None,
         }
@@ -50,7 +50,7 @@ impl ChatMessage {
     pub fn assistant(content: impl Into<String>) -> Self {
         Self {
             role: ChatRole::Assistant,
-            content: content.into(),
+            content: ChatContent::text(content),
             tool_call_id: None,
             tool_calls: None,
         }
@@ -59,11 +59,64 @@ impl ChatMessage {
     pub fn tool(tool_call_id: impl Into<String>, content: impl Into<String>) -> Self {
         Self {
             role: ChatRole::Tool,
-            content: content.into(),
+            content: ChatContent::text(content),
             tool_call_id: Some(tool_call_id.into()),
             tool_calls: None,
         }
     }
+
+    pub fn user_parts(parts: Vec<ChatContentPart>) -> Self {
+        Self {
+            role: ChatRole::User,
+            content: ChatContent::Parts(parts),
+            tool_call_id: None,
+            tool_calls: None,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum ChatContent {
+    Text(String),
+    Parts(Vec<ChatContentPart>),
+}
+
+impl ChatContent {
+    pub fn text(content: impl Into<String>) -> Self {
+        Self::Text(content.into())
+    }
+
+    pub fn as_text(&self) -> Option<&str> {
+        match self {
+            Self::Text(text) => Some(text),
+            Self::Parts(_) => None,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum ChatContentPart {
+    Text { text: String },
+    ImageUrl { image_url: ImageUrl },
+}
+
+impl ChatContentPart {
+    pub fn text(text: impl Into<String>) -> Self {
+        Self::Text { text: text.into() }
+    }
+
+    pub fn image_url(url: impl Into<String>) -> Self {
+        Self::ImageUrl {
+            image_url: ImageUrl { url: url.into() },
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ImageUrl {
+    pub url: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -205,14 +258,17 @@ impl ChatCompletionResponse {
     pub fn first_text(&self) -> Option<&str> {
         self.choices
             .first()
-            .map(|choice| choice.message.content.as_str())
+            .and_then(|choice| choice.message.content.as_text())
     }
 
     pub fn text(self) -> Result<String> {
         self.choices
             .into_iter()
             .next()
-            .map(|choice| choice.message.content)
+            .and_then(|choice| match choice.message.content {
+                ChatContent::Text(text) => Some(text),
+                ChatContent::Parts(_) => None,
+            })
             .ok_or(Error::MissingText)
     }
 
@@ -292,6 +348,10 @@ impl<'a> ChatRequestBuilder<'a> {
 
     pub fn assistant(self, content: impl Into<String>) -> Self {
         self.message(ChatMessage::assistant(content))
+    }
+
+    pub fn user_parts(self, parts: Vec<ChatContentPart>) -> Self {
+        self.message(ChatMessage::user_parts(parts))
     }
 
     pub fn temperature(mut self, temperature: f32) -> Self {

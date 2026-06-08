@@ -259,6 +259,20 @@ impl Client {
         self.post_json(path, body).await
     }
 
+    pub async fn get_compatible<R>(&self, path: &str) -> Result<R>
+    where
+        R: serde::de::DeserializeOwned,
+    {
+        self.get_json(path).await
+    }
+
+    pub async fn delete_compatible<R>(&self, path: &str) -> Result<R>
+    where
+        R: serde::de::DeserializeOwned,
+    {
+        self.delete_json(path).await
+    }
+
     pub(crate) async fn get_json<R>(&self, path: &str) -> Result<R>
     where
         R: serde::de::DeserializeOwned,
