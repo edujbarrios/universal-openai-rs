@@ -38,9 +38,6 @@ git clone https://github.com/edujbarrios/universal-openai-rs.git
 cd universal-openai-rs
 ```
 
-Repository:
-[github.com/edujbarrios/universal-openai-rs](https://github.com/edujbarrios/universal-openai-rs/tree/main)
-
 ## Use From Another Rust Project
 
 Git dependency:
@@ -64,20 +61,6 @@ Import it in Rust as:
 ```rust
 use universal_openai_rs::prelude::*;
 ```
-
-## Environment
-
-`Client::from_env()` reads:
-
-```bash
-OPENAI_API_KEY=your-api-key
-OPENAI_BASE_URL=https://api.openai.com/v1
-OPENAI_MODEL=gpt-4o-mini
-```
-
-`OPENAI_BASE_URL` and `OPENAI_MODEL` are optional. For local or hosted
-OpenAI-compatible providers, set `OPENAI_BASE_URL` to the provider's `/v1` base
-URL.
 
 ## Quick Start
 
@@ -175,6 +158,37 @@ let ollama = Client::for_provider("ollama", Provider::Ollama)?;
 let custom = Client::compatible("your-api-key", "https://api.example.com/v1")?;
 ```
 
+## Adding an OpenAI-Compatible Third-Party API
+
+Any provider that exposes an OpenAI-compatible `/v1` API can be used by changing
+the base URL.
+
+Example with `llm7.io`:
+
+```rust
+use universal_openai_rs::Client;
+
+#[tokio::main]
+async fn main() -> universal_openai_rs::Result<()> {
+    let client = Client::compatible("your-api-key", "https://api.llm7.io/v1")?;
+
+    let text = client
+        .ask("gpt-4o-mini", "Explain OpenAI-compatible APIs in one sentence.")
+        .await?;
+
+    println!("{text}");
+    Ok(())
+}
+```
+
+You can also use environment variables:
+
+```bash
+OPENAI_API_KEY=your-api-key
+OPENAI_BASE_URL=https://api.llm7.io/v1
+OPENAI_MODEL=gpt-4o-mini
+```
+
 ## Common Workflows
 
 ```rust
@@ -262,4 +276,3 @@ cargo doc --no-deps
 - [Known issues](docs/known-issues.md)
 - [Implemented coverage](docs/status.md)
 - [Examples](examples/README.md)
-
