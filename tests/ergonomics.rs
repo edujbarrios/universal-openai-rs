@@ -1,7 +1,7 @@
 use serde::Deserialize;
 use universal_openai_rs::{
     ChatChoice, ChatCompletionResponse, ChatMessage, EmbeddingData, EmbeddingsResponse,
-    Provider, ResponsesResponse,
+    Config, Provider, ResponsesResponse,
 };
 
 #[derive(Debug, Deserialize, PartialEq, Eq)]
@@ -17,6 +17,13 @@ fn provider_presets_expose_openai_compatible_base_urls() {
         Provider::Custom("https://api.example.com/v1".to_string()).base_url(),
         "https://api.example.com/v1"
     );
+}
+
+#[test]
+fn config_trims_base_url_whitespace_and_trailing_slashes() {
+    let config = Config::new("test-key").with_base_url(" https://api.example.com/v1/// ");
+
+    assert_eq!(config.base_url(), "https://api.example.com/v1");
 }
 
 #[test]

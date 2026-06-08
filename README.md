@@ -199,6 +199,12 @@ Vision inputs accept image URLs or base64 data URLs such as
 Files can be uploaded, listed, inspected, deleted, and downloaded with
 `client.files().content(file_id)`.
 
+## Known Issues
+
+This is an early local/Git dependency. Common issues are missing `cargo`, missing
+`OPENAI_API_KEY`, provider-specific fields, and non-standard streaming formats.
+See [docs/known-issues.md](docs/known-issues.md).
+
 ## Escape Hatch
 
 ```rust
@@ -228,5 +234,6 @@ cargo doc --no-deps
 
 - [Design philosophy](docs/design.md)
 - [Provider compatibility](docs/providers.md)
+- [Known issues](docs/known-issues.md)
 - [Implemented coverage](docs/status.md)
 - [Examples](examples/README.md)

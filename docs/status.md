@@ -39,5 +39,6 @@ for providers that still expose engines-compatible paths.
 
 - Improve provider compatibility notes as hosted and local APIs evolve.
 - Keep examples small and practical.
+- Track known issues and provider quirks in `docs/known-issues.md`.
 - Preserve the simple path while adding typed coverage for common workflows.
 - Avoid provider lock-in in the core crate.

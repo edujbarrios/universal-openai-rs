@@ -66,7 +66,11 @@ impl Config {
     }
 
     pub fn with_base_url(mut self, base_url: impl Into<String>) -> Self {
-        self.base_url = base_url.into().trim_end_matches('/').to_string();
+        self.base_url = base_url
+            .into()
+            .trim()
+            .trim_end_matches('/')
+            .to_string();
         self
     }
 
