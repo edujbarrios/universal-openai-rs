@@ -10,12 +10,13 @@ async fn main() -> Result<()> {
         .simple("agent1", "Answer as a concise Rust AI engineer.")
         .simple("agent2", "Review the answer and suggest one improvement.");
 
-    let first = agents
-        .agent1("Design a simple OpenAI-compatible Rust API call.")
+    let run = agents
+        .sequence(
+            ["agent1", "agent2"],
+            "Design a simple OpenAI-compatible Rust API call.",
+        )
         .await?;
-    let second = agents.agent2(first.output).await?;
 
-    println!("{}", second.output);
+    println!("{}", run.output);
     Ok(())
 }
-

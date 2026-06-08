@@ -59,6 +59,13 @@ pub struct AgentRun {
     pub output: String,
 }
 
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct AgentChainRun {
+    pub initial_task: String,
+    pub steps: Vec<AgentRun>,
+    pub output: String,
+}
+
 #[derive(Debug, Clone)]
 pub struct Agents<'a> {
     client: &'a Client,
@@ -103,6 +110,32 @@ impl<'a> Agents<'a> {
             .cloned()
             .unwrap_or_else(|| AgentSpec::new(name));
         self.run_spec(spec, task).await
+    }
+
+    pub async fn sequence<I, S>(
+        &self,
+        agents: I,
+        task: impl Into<String>,
+    ) -> Result<AgentChainRun>
+    where
+        I: IntoIterator<Item = S>,
+        S: Into<String>,
+    {
+        let initial_task = task.into();
+        let mut next_task = initial_task.clone();
+        let mut steps = Vec::new();
+
+        for agent in agents {
+            let run = self.run(&agent.into(), next_task).await?;
+            next_task = run.output.clone();
+            steps.push(run);
+        }
+
+        Ok(AgentChainRun {
+            initial_task,
+            output: next_task,
+            steps,
+        })
     }
 
     pub async fn run_spec(
@@ -153,4 +186,3 @@ impl<'a> Agents<'a> {
         self.run("agent3", task).await
     }
 }
-

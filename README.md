@@ -7,99 +7,21 @@ A self-maintained, OpenAI-compatible API wrapper for Rust.
 
 Simple by default. Structured when needed. Compatible by design.
 
-`universal-openai-rs` is built for one idea: keep the wire format compatible with
-the OpenAI API specification while making everyday Rust calls feel simple,
-predictable, and provider-agnostic.
+`universal-openai-rs` makes easy, well-structured API calls to OpenAI-compatible
+providers while keeping the underlying API shape available.
 
-The intention of this repo is to make easy, well-structured API calls for
-OpenAI-compatible APIs. The design is simple by default and spec-compatible when
-needed.
+## Why It Stands Out
 
-Most Rust SDKs start from the endpoint. `universal-openai-rs` starts from the
-developer's intent:
-
-- `ask(...)` for one-line text generation.
-- `prompt(...)` for a readable prompt-first workflow.
-- `agents()` for native lightweight agent-style workflows.
-- `chat()` when you want full OpenAI-compatible chat completions.
-- `responses()` and `embeddings()` for newer API surfaces.
-- `send_compatible(...)` when a provider adds a feature before the crate does.
-
-It is open source from the beginning and maintained under the GitHub identity
-`edujbarrios` by Eduardo J. Barrios.
-
-## Open Source Readiness
-
-This repository is intended to be open source from the start. It includes CI,
-tests, examples, contribution notes, security reporting, release notes, and a
-small public API surface designed to be reviewed and extended.
-
-Before publishing or opening a pull request, run:
-
-```bash
-cargo fmt --check
-cargo clippy --all-targets -- -D warnings
-cargo test
-cargo doc --no-deps
-```
-
-## Goals
-
-- Simple calls for common LLM workflows.
-- OpenAI-compatible request and response shapes.
-- Works with OpenAI-compatible providers through a configurable base URL.
-- Chat completions, streaming, embeddings, and Responses API support.
-- Structured output and tool calling without provider lock-in.
-- Configurable timeouts and retries for production-friendly usage.
-- Async-first HTTP client using `reqwest`.
-- Small, readable API surface that is easy to maintain.
-
-## What Makes It Different
-
-`universal-openai-rs` is not trying to hide the OpenAI-compatible spec. It keeps
-that shape available, but wraps it with a Rust-friendly experience:
-
-- Intent-first calls: `ask`, `ask_json`, `prompt`, `embed`, and `respond_text`.
-- Spec builders: `chat`, `responses`, and `embeddings` map cleanly to provider
-  JSON.
-- Provider presets for common OpenAI-compatible APIs.
-- A raw compatibility escape hatch for endpoints and provider options that are
-  not typed yet.
-- Typed structured output helpers without forcing a framework.
-- Small public types that are easy to inspect, serialize, test, and extend.
-
-## API Surface
-
-| Need | Simple API | Structured API |
-| --- | --- | --- |
-| Text generation | `client.ask(...)` | `client.chat().send()` |
-| Prompt workflow | `client.prompt(...).run_text()` | `client.prompt(...).into_chat()` |
-| Agents | `client.agents().agent1(...)` | `client.agents().run("name", ...)` |
-| Typed JSON | `client.ask_json::<T>(...)` | `.json_schema(...).send()` |
-| Vision chat | `.user_parts(...)` | `ChatContentPart::image_url(...)` |
-| Streaming | `.stream_text()` | `.stream()` |
-| Embeddings | `client.embed(...)` | `client.embeddings().send()` |
-| Responses API | `client.respond_text(...)` | `client.responses().send()` |
-| Provider-specific fields | `.extra(...)` | `.send_compatible(...)` |
-
-## Endpoint Coverage
-
-| API area | First-class support | Entry point |
-| --- | --- | --- |
-| Models | Yes | `client.list_models()` / `client.models()` |
-| Completions | Yes | `client.complete_text(...)` / `client.completions()` |
-| Chat | Yes | `client.chat()` / `client.prompt(...)` |
-| Images | Yes | `client.generate_image(...)` / `client.images()` |
-| Embeddings | Yes | `client.embeddings()` / `client.embed(...)` |
-| Audio | Yes | `client.transcribe(...)` / `client.audio()` |
-| Files | Yes | `client.files()` / `client.upload_file(...)` |
-| Fine-tuning | Yes | `client.fine_tuning()` |
-| Moderations | Yes | `client.moderate_text(...)` / `client.moderations()` |
-| Engines | No first-class API | Use `send_compatible(...)` for legacy providers |
+- Intent-first helpers: `ask`, `prompt`, `embed`, `respond_text`.
+- Native lightweight agents: `agents().agent1(task)` and `agents().sequence(...)`.
+- OpenAI-compatible builders for chat, responses, embeddings, images, audio,
+  files, models, fine-tuning, moderations, and legacy completions.
+- Provider presets for OpenAI, OpenRouter, Groq, Together, Ollama, and custom
+  OpenAI-compatible base URLs.
+- Escape hatches for new or provider-specific endpoints:
+  `send_compatible`, `get_compatible`, and `delete_compatible`.
 
 ## Quick Start
-
-For the shortest common path:
 
 ```rust
 use universal_openai_rs::Client;
@@ -114,294 +36,102 @@ async fn main() -> universal_openai_rs::Result<()> {
 }
 ```
 
-For a more expressive prompt-first workflow:
-
-```rust
-use universal_openai_rs::prelude::*;
-
-#[tokio::main]
-async fn main() -> Result<()> {
-    let client = Client::from_env()?;
-    let text = client
-        .prompt("Explain why Rust is useful for AI API clients.")
-        .model("gpt-4o-mini")
-        .system("Answer in one practical sentence.")
-        .run_text()
-        .await?;
-
-    println!("{text}");
-    Ok(())
-}
-```
-
-For native lightweight agent-style workflows:
-
-```rust
-use universal_openai_rs::prelude::*;
-
-#[tokio::main]
-async fn main() -> Result<()> {
-    let client = Client::from_env()?;
-
-    let agents = client
-        .agents()
-        .default_model("gpt-4o-mini")
-        .simple("agent1", "Answer as a concise Rust AI engineer.")
-        .simple("agent2", "Review the answer and suggest one improvement.");
-
-    let first = agents
-        .agent1("Design a simple OpenAI-compatible Rust API call.")
-        .await?;
-    let second = agents.agent2(first.output).await?;
-
-    println!("{}", second.output);
-    Ok(())
-}
-```
-
-For a full OpenAI-compatible chat request:
-
-```rust
-use universal_openai_rs::{Client, ChatMessage};
-
-#[tokio::main]
-async fn main() -> universal_openai_rs::Result<()> {
-    let client = Client::from_env()?;
-
-    let response = client
-        .chat()
-        .model("gpt-4o-mini")
-        .message(ChatMessage::user("Write one sentence about Rust."))
-        .send()
-        .await?;
-
-    println!("{}", response.first_text().unwrap_or_default());
-    Ok(())
-}
-```
-
-By default, `Client::from_env()` reads:
+`Client::from_env()` reads:
 
 - `OPENAI_API_KEY`
-- `OPENAI_BASE_URL`, optional, defaults to `https://api.openai.com/v1`
-- `OPENAI_MODEL`, optional, used by `ask_default(...)` and `chat_default()`
+- `OPENAI_BASE_URL`, optional
+- `OPENAI_MODEL`, optional
 
-With `OPENAI_MODEL` set, the shortest call becomes:
-
-```rust
-let text = client.ask_default("Write one sentence about Rust.").await?;
-```
-
-You can also import the common surface with:
+## Prompt-First API
 
 ```rust
 use universal_openai_rs::prelude::*;
+
+let text = Client::from_env()?
+    .prompt("Explain why Rust is useful for AI API clients.")
+    .model("gpt-4o-mini")
+    .system("Answer in one practical sentence.")
+    .run_text()
+    .await?;
+```
+
+## Native Agents
+
+```rust
+use universal_openai_rs::prelude::*;
+
+let client = Client::from_env()?;
+
+let agents = client
+    .agents()
+    .default_model("gpt-4o-mini")
+    .simple("agent1", "Draft a concise technical answer.")
+    .simple("agent2", "Review and improve the draft.");
+
+let run = agents
+    .sequence(["agent1", "agent2"], "Design a simple OpenAI-compatible Rust call.")
+    .await?;
+
+println!("{}", run.output);
+```
+
+You can also run an individual agent:
+
+```rust
+let result = agents.agent1("Summarize provider-agnostic APIs.").await?;
 ```
 
 ## Provider-Agnostic Usage
 
 ```rust
-use universal_openai_rs::{Client, Config, Provider};
+use universal_openai_rs::{Client, Provider};
 
 let openrouter = Client::for_provider("your-api-key", Provider::OpenRouter)?;
-let local = Client::for_provider("ollama", Provider::Ollama)?;
+let ollama = Client::for_provider("ollama", Provider::Ollama)?;
 let custom = Client::compatible("your-api-key", "https://api.example.com/v1")?;
 ```
 
-Any service that follows the OpenAI-compatible `/chat/completions` format can
-be called through the same client.
-
-You can still build a client manually when you want more control:
-
-```rust
-let client = Client::new(
-    Config::new("your-api-key")
-        .with_base_url("https://api.example.com/v1"),
-)?;
-```
-
-## Streaming
-
-```rust
-use futures_util::StreamExt;
-use universal_openai_rs::Client;
-
-let client = Client::from_env()?;
-let mut stream = client
-    .chat()
-    .model("gpt-4o-mini")
-    .user("Write a short Rust haiku.")
-    .stream()
-    .await?;
-
-while let Some(event) = stream.next().await {
-    for choice in event?.choices {
-        if let Some(text) = choice.delta.content {
-            print!("{text}");
-        }
-    }
-}
-```
-
-## Vision and Multimodal Chat
-
-```rust
-use universal_openai_rs::{ChatContentPart, Client};
-
-let response = client
-    .chat()
-    .model("gpt-4o-mini")
-    .user_parts(vec![
-        ChatContentPart::text("Describe this image in one sentence."),
-        ChatContentPart::image_url("https://example.com/image.png"),
-    ])
-    .send()
-    .await?;
-```
-
-## Embeddings
-
-```rust
-let vector = client
-    .embed("text-embedding-3-small", "Rust makes API clients reliable.")
-    .await?;
-```
-
-## Images
-
-```rust
-let image = client
-    .images()
-    .model("gpt-image-1")
-    .prompt("A clean Rust API diagram")
-    .size("1024x1024")
-    .b64_json()
-    .generate()
-    .await?;
-```
-
-## Audio
-
-```rust
-let transcript = client
-    .audio()
-    .transcription()
-    .model("whisper-1")
-    .file("meeting.mp3", audio_bytes)
-    .send()
-    .await?;
-```
-
-## Files and Fine-Tuning
-
-```rust
-let file = client
-    .upload_file("fine-tune")
-    .bytes("training.jsonl", training_bytes)
-    .send()
-    .await?;
-
-let job = client
-    .fine_tuning()
-    .create()
-    .model("gpt-4o-mini")
-    .training_file(file.id)
-    .send()
-    .await?;
-```
-
-## Moderations
-
-```rust
-let moderation = client
-    .moderations()
-    .input("Text to classify")
-    .send()
-    .await?;
-```
-
-## Responses API
-
-```rust
-let response = client
-    .respond_text("gpt-4o-mini", "Explain provider-agnostic APIs in one sentence.")
-    .await?;
-
-println!("{}", response.output_text.unwrap_or_default());
-```
-
-Responses can also use typed multimodal input:
-
-```rust
-use universal_openai_rs::ResponseContentPart;
-
-let response = client
-    .responses()
-    .model("gpt-4o-mini")
-    .user_parts(vec![
-        ResponseContentPart::text("Describe this image in one sentence."),
-        ResponseContentPart::image_url("https://example.com/image.png"),
-    ])
-    .send()
-    .await?;
-```
-
-## Structured Output
-
-```rust
-use serde::Deserialize;
-use serde_json::json;
-
-#[derive(Debug, Deserialize)]
-struct EngineerProfile {
-    title: String,
-    strengths: Vec<String>,
-}
-
-let profile: EngineerProfile = client
-    .ask_json("gpt-4o-mini", "Return a compact profile for an AI engineer.")
-    .await?;
-```
-
-Prompt-first structured output is available too:
-
-```rust
-let profile: EngineerProfile = client
-    .prompt("Return a compact profile for an AI engineer.")
-    .model("gpt-4o-mini")
-    .run_json()
-    .await?;
-```
-
-When you want to pass an explicit JSON schema:
+## Structured Builders
 
 ```rust
 let response = client
     .chat()
     .model("gpt-4o-mini")
-    .user("Return a compact profile for an AI engineer.")
-    .json_schema(
-        "engineer_profile",
-        json!({
-            "type": "object",
-            "properties": {
-                "title": {"type": "string"},
-                "strengths": {
-                    "type": "array",
-                    "items": {"type": "string"}
-                }
-            },
-            "required": ["title", "strengths"]
-        }),
-    )
+    .system("Be concise.")
+    .user("Explain streaming.")
+    .temperature(0.2)
     .send()
     .await?;
 ```
 
-## OpenAI-Compatible Escape Hatch
+## Common Workflows
 
-If a provider supports a new endpoint before this crate adds first-class types,
-send the OpenAI-compatible JSON yourself:
+```rust
+let text = client.ask("gpt-4o-mini", "Hello").await?;
+let json: MyType = client.ask_json("gpt-4o-mini", "Return JSON").await?;
+let vector = client.embed("text-embedding-3-small", "Embed this").await?;
+let image = client.generate_image("gpt-image-1", "A clean Rust API diagram").await?;
+let moderation = client.moderate_text("Text to classify").await?;
+```
+
+## Endpoint Coverage
+
+| API area | Support |
+| --- | --- |
+| Models | `client.models()` / `client.list_models()` |
+| Completions | `client.completions()` / `client.complete_text(...)` |
+| Chat | `client.chat()` / `client.prompt(...)` |
+| Responses | `client.responses()` / `client.respond_text(...)` |
+| Embeddings | `client.embeddings()` / `client.embed(...)` |
+| Images | `client.images()` / `client.generate_image(...)` |
+| Audio | `client.audio()` / `client.transcribe(...)` |
+| Files | `client.files()` / `client.upload_file(...)` |
+| Fine-tuning | `client.fine_tuning()` |
+| Moderations | `client.moderations()` / `client.moderate_text(...)` |
+| Agents | `client.agents()` |
+| Engines | Legacy only via compatibility escape hatches |
+
+## Escape Hatch
 
 ```rust
 use serde_json::{json, Value};
@@ -417,60 +147,20 @@ let response: Value = client
     .await?;
 ```
 
-GET and DELETE escape hatches are available too:
+## Checks
 
-```rust
-let model: serde_json::Value = client.get_compatible("models/gpt-4o-mini").await?;
-let deleted: serde_json::Value = client.delete_compatible("models/custom-model").await?;
+```bash
+cargo fmt --check
+cargo clippy --all-targets -- -D warnings
+cargo test
+cargo doc --no-deps
 ```
 
-This is also the intended path for legacy `Engines` endpoints.
+## More
 
-## Tool Calling
+- [Design philosophy](docs/design.md)
+- [Provider compatibility](docs/providers.md)
+- [Implemented coverage](docs/status.md)
+- [Examples](examples/README.md)
+- [Release checklist](docs/release-checklist.md)
 
-```rust
-use serde_json::json;
-use universal_openai_rs::Tool;
-
-let response = client
-    .chat()
-    .model("gpt-4o-mini")
-    .user("What should I pack for Madrid today?")
-    .tool(Tool::function(
-        "get_weather",
-        "Get weather for a city.",
-        json!({
-            "type": "object",
-            "properties": {
-                "city": {"type": "string"}
-            },
-            "required": ["city"]
-        }),
-    ))
-    .send()
-    .await?;
-```
-
-## Timeouts and Retries
-
-```rust
-use std::time::Duration;
-use universal_openai_rs::{Client, Config};
-
-let client = Client::new(
-    Config::new("your-api-key")
-        .with_timeout(Duration::from_secs(30))
-        .with_max_retries(3),
-)?;
-```
-
-## Status
-
-This project is intentionally small and early, but the first useful API surface
-now covers chat completions, streaming, embeddings, Responses API, structured
-output, tool calling, retries, timeouts, and provider-specific extension fields.
-
-See [docs/design.md](docs/design.md) for the design philosophy and
-[docs/providers.md](docs/providers.md) for provider compatibility notes. See
-[docs/status.md](docs/status.md) for implemented coverage. See
-[docs/release-checklist.md](docs/release-checklist.md) before publishing.

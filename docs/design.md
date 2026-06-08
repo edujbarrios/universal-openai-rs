@@ -68,6 +68,15 @@ let first = agents.agent1("Design a simple API call.").await?;
 let second = agents.agent2(first.output).await?;
 ```
 
+For chained work, `sequence(...)` runs agents in order and passes each output to
+the next agent:
+
+```rust
+let run = agents
+    .sequence(["agent1", "agent2"], "Design a simple API call.")
+    .await?;
+```
+
 This gives the crate native agent ergonomics while keeping the underlying API
 simple and inspectable.
 

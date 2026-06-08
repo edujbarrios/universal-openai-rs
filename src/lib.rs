@@ -52,7 +52,7 @@ mod agents;
 mod prompt;
 mod responses;
 
-pub use agents::{AgentRun, AgentSpec, Agents};
+pub use agents::{AgentChainRun, AgentRun, AgentSpec, Agents};
 pub use chat::{
     ChatChoice, ChatCompletionRequest, ChatCompletionResponse, ChatContent,
     ChatContentPart, ChatMessage, ChatRequestBuilder, ChatRole, ChatStream,
@@ -97,7 +97,7 @@ pub use responses::{
 
 pub mod prelude {
     pub use crate::{
-        AgentRun, AgentSpec, Agents, ChatContentPart, ChatMessage, Client,
+        AgentChainRun, AgentRun, AgentSpec, Agents, ChatContentPart, ChatMessage, Client,
         Config, Error, PromptBuilder, Provider, ResponseContentPart,
         ResponseInput, ResponseInputItem, Result, Tool,
     };

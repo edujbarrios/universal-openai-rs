@@ -10,7 +10,7 @@ an implemented compatibility layer focused on easy, well-structured calls.
 - Legacy completions API.
 - Chat completions.
 - Prompt-first text generation.
-- Native lightweight agent-style workflows.
+- Native lightweight agent-style workflows, including sequential agent chains.
 - Streaming chat completions.
 - Typed streaming deltas.
 - Structured output helpers.

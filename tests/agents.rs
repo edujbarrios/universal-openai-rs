@@ -14,6 +14,30 @@ fn builds_agent_specs() {
 }
 
 #[test]
+fn agent_chain_run_records_steps_and_output() {
+    let run = universal_openai_rs::AgentChainRun {
+        initial_task: "start".to_string(),
+        steps: vec![
+            universal_openai_rs::AgentRun {
+                agent: "agent1".to_string(),
+                task: "start".to_string(),
+                output: "draft".to_string(),
+            },
+            universal_openai_rs::AgentRun {
+                agent: "agent2".to_string(),
+                task: "draft".to_string(),
+                output: "final".to_string(),
+            },
+        ],
+        output: "final".to_string(),
+    };
+
+    assert_eq!(run.steps.len(), 2);
+    assert_eq!(run.output, "final");
+}
+
+
+#[test]
 fn agents_registry_stores_named_specs() {
     let client = Client::new(Config::new("test-key").with_default_model("gpt-4o-mini")).unwrap();
     let agents = client
@@ -30,4 +54,3 @@ fn agents_registry_stores_named_specs() {
         Some("Review the answer critically.")
     );
 }
-
