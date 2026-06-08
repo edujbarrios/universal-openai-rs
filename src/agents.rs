@@ -1,10 +1,13 @@
 use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
-use crate::{Client, Error, Result, Tool};
+use crate::{
+    AiTool, ChatMessage, Client, DynAiTool, Error, FunctionAiTool, Result, Tool, ToolRegistry,
+};
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AgentSpec {
     pub name: String,
     pub model: Option<String>,
@@ -12,6 +15,19 @@ pub struct AgentSpec {
     pub temperature: Option<f32>,
     pub max_tokens: Option<u32>,
     pub tools: Vec<Tool>,
+    #[serde(skip)]
+    pub tool_registry: Option<ToolRegistry>,
+}
+
+impl PartialEq for AgentSpec {
+    fn eq(&self, other: &Self) -> bool {
+        self.name == other.name
+            && self.model == other.model
+            && self.instructions == other.instructions
+            && self.temperature == other.temperature
+            && self.max_tokens == other.max_tokens
+            && self.tools == other.tools
+    }
 }
 
 impl AgentSpec {
@@ -23,6 +39,7 @@ impl AgentSpec {
             temperature: None,
             max_tokens: None,
             tools: Vec::new(),
+            tool_registry: None,
         }
     }
 
@@ -48,6 +65,38 @@ impl AgentSpec {
 
     pub fn tool(mut self, tool: Tool) -> Self {
         self.tools.push(tool);
+        self
+    }
+
+    pub fn ai_tool<T>(mut self, tool: T) -> Self
+    where
+        T: AiTool,
+    {
+        self.tools.push(tool.definition());
+        self.tool_registry
+            .get_or_insert_with(ToolRegistry::new)
+            .insert(tool);
+        self
+    }
+
+    pub fn tool_fn<Args, Output, F, Fut>(
+        mut self,
+        name: impl Into<String>,
+        description: impl Into<String>,
+        parameters: Value,
+        call: F,
+    ) -> Self
+    where
+        Args: serde::de::DeserializeOwned + Send + Sync + 'static,
+        Output: Serialize + Send + Sync + 'static,
+        F: Fn(Args) -> Fut + Send + Sync + 'static,
+        Fut: std::future::Future<Output = Result<Output>> + Send + 'static,
+    {
+        let tool = FunctionAiTool::new(name, description, parameters, call);
+        self.tools.push(tool.definition());
+        self.tool_registry
+            .get_or_insert_with(ToolRegistry::new)
+            .insert_dyn(tool);
         self
     }
 }
@@ -143,7 +192,7 @@ impl<'a> Agents<'a> {
             .or_else(|| self.default_model.clone())
             .ok_or_else(|| Error::InvalidConfig("agent model is required".to_string()))?;
 
-        let mut prompt = self.client.prompt(task.clone()).model(model);
+        let mut prompt = self.client.prompt(task.clone()).model(model.clone());
 
         if let Some(instructions) = spec.instructions.clone() {
             prompt = prompt.system(instructions);
@@ -158,7 +207,40 @@ impl<'a> Agents<'a> {
             prompt = prompt.tool(tool);
         }
 
-        let output = prompt.run_text().await?;
+        let output = if let Some(registry) = spec.tool_registry.clone() {
+            let first = prompt.into_chat()?.send().await?;
+            let tool_calls = first.tool_calls().to_vec();
+
+            if tool_calls.is_empty() {
+                first.text()?
+            } else {
+                let executions = registry.call_all(&tool_calls).await?;
+                let mut followup = self.client.chat().model(model);
+
+                if let Some(instructions) = spec.instructions.clone() {
+                    followup = followup.system(instructions);
+                }
+                followup = followup
+                    .message(ChatMessage::user(task.clone()))
+                    .message(ChatMessage::assistant_tool_calls(tool_calls));
+                if let Some(temperature) = spec.temperature {
+                    followup = followup.temperature(temperature);
+                }
+                if let Some(max_tokens) = spec.max_tokens {
+                    followup = followup.max_tokens(max_tokens);
+                }
+                for tool in spec.tools.clone() {
+                    followup = followup.tool(tool);
+                }
+                for execution in executions {
+                    followup = followup.tool_execution(execution);
+                }
+
+                followup.send().await?.text()?
+            }
+        } else {
+            prompt.run_text().await?
+        };
 
         Ok(AgentRun {
             agent: spec.name,

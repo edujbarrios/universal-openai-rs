@@ -18,6 +18,7 @@ simple agent-oriented workflows.
 - Text chunk streaming helpers for UI and CLI use.
 - Structured output helpers.
 - Tool calling helpers.
+- Typed tool execution helpers for lightweight agents.
 - Vision and multimodal chat.
 - Embeddings.
 - Image generation.

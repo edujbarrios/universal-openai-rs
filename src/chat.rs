@@ -2,7 +2,7 @@ use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::{ChatStream, Client, Error, Result, StreamDecoder, TextChunkStream};
+use crate::{ChatStream, Client, Error, Result, StreamDecoder, TextChunkStream, ToolExecution};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -50,6 +50,15 @@ impl ChatMessage {
             content: ChatContent::text(content),
             tool_call_id: None,
             tool_calls: None,
+        }
+    }
+
+    pub fn assistant_tool_calls(tool_calls: Vec<ToolCall>) -> Self {
+        Self {
+            role: ChatRole::Assistant,
+            content: ChatContent::Null,
+            tool_call_id: None,
+            tool_calls: Some(tool_calls),
         }
     }
 
@@ -294,6 +303,13 @@ impl ChatCompletionResponse {
         let text = self.first_text().ok_or(Error::MissingText)?;
         Ok(serde_json::from_str(text)?)
     }
+
+    pub fn tool_calls(&self) -> &[ToolCall] {
+        self.choices
+            .first()
+            .and_then(|choice| choice.message.tool_calls.as_deref())
+            .unwrap_or(&[])
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -363,6 +379,14 @@ impl<'a> ChatRequestBuilder<'a> {
 
     pub fn assistant(self, content: impl Into<String>) -> Self {
         self.message(ChatMessage::assistant(content))
+    }
+
+    pub fn tool_result(self, tool_call_id: impl Into<String>, content: impl Into<String>) -> Self {
+        self.message(ChatMessage::tool(tool_call_id, content))
+    }
+
+    pub fn tool_execution(self, execution: ToolExecution) -> Self {
+        self.message(execution.message())
     }
 
     pub fn user_parts(self, parts: Vec<ChatContentPart>) -> Self {

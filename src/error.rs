@@ -87,6 +87,9 @@ pub enum Error {
     #[error("response did not contain an embedding vector")]
     MissingEmbedding,
 
+    #[error("unknown tool: {0}")]
+    UnknownTool(String),
+
     #[error("http request failed: {0}")]
     Http(#[from] reqwest::Error),
 

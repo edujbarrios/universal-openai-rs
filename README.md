@@ -142,6 +142,43 @@ let run = agents
     .await?;
 ```
 
+Agents can also carry lightweight executable tools. Tool arguments are decoded
+into typed Rust structs before your function runs.
+
+```rust
+use serde::{Deserialize, Serialize};
+use serde_json::json;
+use universal_openai_rs::prelude::*;
+
+#[derive(Deserialize)]
+struct SearchArgs {
+    query: String,
+}
+
+#[derive(Serialize)]
+struct SearchOutput {
+    answer: String,
+}
+
+let researcher = client.agent("researcher").tool_fn(
+    "search_docs",
+    "Search project documentation.",
+    json!({
+        "type": "object",
+        "properties": {"query": {"type": "string"}},
+        "required": ["query"]
+    }),
+    |args: SearchArgs| async move {
+        Ok(SearchOutput {
+            answer: format!("Found docs for {}", args.query),
+        })
+    },
+);
+```
+
+For reusable tools, implement `AiTool` and register it with `ToolRegistry` or
+`AgentSpec::ai_tool(...)`.
+
 ## Structured Builders
 
 Use builders when you want a request shape that stays close to the
@@ -309,6 +346,7 @@ Files can be uploaded, listed, inspected, deleted, and downloaded with
 | Fine-tuning | `client.fine_tuning()` |
 | Moderations | `client.moderations()` / `client.moderate_text(...)` |
 | Agents | `client.agents()` |
+| Tool execution | `ToolRegistry` / `AgentSpec::tool_fn(...)` |
 | Engines | Legacy only via compatibility escape hatches |
 
 ## Escape Hatches

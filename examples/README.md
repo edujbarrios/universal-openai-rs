@@ -17,7 +17,7 @@ path first, then reveal lower-level OpenAI-compatible control only when needed.
 | `responses_multimodal.rs` | Multimodal Responses API input |
 | `structured_output.rs` | Explicit JSON schema output |
 | `typed_json.rs` | Typed JSON parsing into a Rust struct |
-| `tool_calling.rs` | Function tool definitions |
+| `tool_calling.rs` | Function tool definitions and typed tool execution |
 | `providers.rs` | Provider presets such as Ollama |
 | `production_http.rs` | Custom `reqwest::Client` and provider headers |
 | `escape_hatch.rs` | Raw OpenAI-compatible JSON calls |

@@ -52,6 +52,7 @@ mod moderations;
 mod prompt;
 mod responses;
 mod streaming;
+mod tools;
 
 pub use agents::{AgentChainRun, AgentRun, AgentSpec, Agents};
 pub use audio::{Audio, AudioResponse, TranscriptionBuilder, TranslationBuilder};
@@ -94,12 +95,14 @@ pub use streaming::{
     ChatStream, JsonLinesDecoder, LenientSseDecoder, OpenAiSseDecoder, StreamDecoder,
     TextChunkStream,
 };
+pub use tools::{AiTool, DynAiTool, FunctionAiTool, ToolExecution, ToolRegistry};
 
 pub mod prelude {
     pub use crate::{
         AgentChainRun, AgentRun, AgentSpec, Agents, ApiError, ChatContentPart, ChatMessage, Client,
-        Config, Error, JsonLinesDecoder, LenientSseDecoder, OpenAiSseDecoder, PromptBuilder,
-        Provider, ResponseContentPart, ResponseInput, ResponseInputItem, Result, RetryConfig,
-        StreamDecoder, TextChunkStream, Tool,
+        AiTool, Config, DynAiTool, Error, FunctionAiTool, JsonLinesDecoder, LenientSseDecoder,
+        OpenAiSseDecoder, PromptBuilder, Provider, ResponseContentPart, ResponseInput,
+        ResponseInputItem, Result, RetryConfig, StreamDecoder, TextChunkStream, Tool,
+        ToolExecution, ToolRegistry,
     };
 }

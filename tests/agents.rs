@@ -1,3 +1,5 @@
+use serde::Deserialize;
+use serde_json::json;
 use universal_openai_rs::{AgentSpec, Client, Config};
 
 #[test]
@@ -11,6 +13,33 @@ fn builds_agent_specs() {
     assert_eq!(spec.name, "researcher");
     assert_eq!(spec.model.as_deref(), Some("gpt-4o-mini"));
     assert_eq!(spec.instructions.as_deref(), Some("Find concise facts."));
+}
+
+#[derive(Debug, Deserialize)]
+struct SearchArgs {
+    query: String,
+}
+
+#[test]
+fn agent_spec_registers_executable_tools() {
+    let spec = AgentSpec::new("researcher").tool_fn(
+        "search_docs",
+        "Search docs.",
+        json!({
+            "type": "object",
+            "properties": {"query": {"type": "string"}},
+            "required": ["query"]
+        }),
+        |args: SearchArgs| async move { Ok(json!({ "answer": args.query })) },
+    );
+
+    assert_eq!(spec.tools[0].function.name, "search_docs");
+    assert!(spec
+        .tool_registry
+        .as_ref()
+        .unwrap()
+        .get("search_docs")
+        .is_some());
 }
 
 #[test]
