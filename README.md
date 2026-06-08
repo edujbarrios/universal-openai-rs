@@ -20,6 +20,7 @@ developer's intent:
 
 - `ask(...)` for one-line text generation.
 - `prompt(...)` for a readable prompt-first workflow.
+- `agents()` for native lightweight agent-style workflows.
 - `chat()` when you want full OpenAI-compatible chat completions.
 - `responses()` and `embeddings()` for newer API surfaces.
 - `send_compatible(...)` when a provider adds a feature before the crate does.
@@ -73,6 +74,7 @@ that shape available, but wraps it with a Rust-friendly experience:
 | --- | --- | --- |
 | Text generation | `client.ask(...)` | `client.chat().send()` |
 | Prompt workflow | `client.prompt(...).run_text()` | `client.prompt(...).into_chat()` |
+| Agents | `client.agents().agent1(...)` | `client.agents().run("name", ...)` |
 | Typed JSON | `client.ask_json::<T>(...)` | `.json_schema(...).send()` |
 | Vision chat | `.user_parts(...)` | `ChatContentPart::image_url(...)` |
 | Streaming | `.stream_text()` | `.stream()` |
@@ -128,6 +130,31 @@ async fn main() -> Result<()> {
         .await?;
 
     println!("{text}");
+    Ok(())
+}
+```
+
+For native lightweight agent-style workflows:
+
+```rust
+use universal_openai_rs::prelude::*;
+
+#[tokio::main]
+async fn main() -> Result<()> {
+    let client = Client::from_env()?;
+
+    let agents = client
+        .agents()
+        .default_model("gpt-4o-mini")
+        .simple("agent1", "Answer as a concise Rust AI engineer.")
+        .simple("agent2", "Review the answer and suggest one improvement.");
+
+    let first = agents
+        .agent1("Design a simple OpenAI-compatible Rust API call.")
+        .await?;
+    let second = agents.agent2(first.output).await?;
+
+    println!("{}", second.output);
     Ok(())
 }
 ```

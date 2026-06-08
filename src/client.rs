@@ -1,4 +1,5 @@
 use crate::{
+    AgentSpec, Agents,
     ChatCompletionResponse, ChatRequestBuilder, ChatStream, ChatStreamEvent, Config,
     CompletionRequestBuilder, CompletionResponse, EmbeddingsRequestBuilder,
     EmbeddingsResponse, Error, FileUploadBuilder, Files, FineTuning, ImagesRequestBuilder,
@@ -60,6 +61,14 @@ impl Client {
 
     pub fn prompt(&self, prompt: impl Into<String>) -> PromptBuilder<'_> {
         PromptBuilder::new(self, prompt)
+    }
+
+    pub fn agents(&self) -> Agents<'_> {
+        Agents::new(self)
+    }
+
+    pub fn agent(&self, name: impl Into<String>) -> AgentSpec {
+        AgentSpec::new(name)
     }
 
     pub fn chat_default(&self) -> Result<ChatRequestBuilder<'_>> {

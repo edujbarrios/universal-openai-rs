@@ -8,6 +8,7 @@ path first, then reveal lower-level OpenAI-compatible control only when needed.
 | `ask.rs` | One-line text generation with `ask(...)` |
 | `simple.rs` | Minimal runnable text generation |
 | `prompt_first.rs` | The prompt-first workflow |
+| `agents.rs` | Native agent-style workflows |
 | `chat.rs` | Full chat completions builder |
 | `streaming.rs` | Streaming chat events |
 | `vision_chat.rs` | Vision/multimodal chat content |

@@ -10,6 +10,7 @@ an implemented compatibility layer focused on easy, well-structured calls.
 - Legacy completions API.
 - Chat completions.
 - Prompt-first text generation.
+- Native lightweight agent-style workflows.
 - Streaming chat completions.
 - Typed streaming deltas.
 - Structured output helpers.
@@ -40,4 +41,3 @@ for providers that still expose engines-compatible paths.
 - Keep examples small and practical.
 - Preserve the simple path while adding typed coverage for common workflows.
 - Avoid provider lock-in in the core crate.
-

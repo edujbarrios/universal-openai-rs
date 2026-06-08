@@ -51,6 +51,26 @@ let text = client
 That workflow remains compatible with tools, structured output, streaming, and
 default models.
 
+## Native Agent Layer
+
+The agent layer is intentionally lightweight. It does not require a separate
+runtime, database, scheduler, or framework. An agent is a named prompt policy
+that runs through the same universal OpenAI-compatible client:
+
+```rust
+let agents = client
+    .agents()
+    .default_model("gpt-4o-mini")
+    .simple("agent1", "Answer as a concise Rust AI engineer.")
+    .simple("agent2", "Review the answer and suggest one improvement.");
+
+let first = agents.agent1("Design a simple API call.").await?;
+let second = agents.agent2(first.output).await?;
+```
+
+This gives the crate native agent ergonomics while keeping the underlying API
+simple and inspectable.
+
 ## Provider Compatibility
 
 OpenAI-compatible providers often agree on the broad API shape but differ in

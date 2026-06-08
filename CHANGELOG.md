@@ -9,6 +9,8 @@ The project follows semantic versioning once public releases begin.
 ### Added
 
 - Intent-first APIs: `ask`, `ask_default`, `ask_json`, and `prompt`.
+- Native lightweight agent-style APIs with `agents()`, `AgentSpec`, and
+  `agent1(...)` / `agent2(...)` convenience runners.
 - OpenAI-compatible chat completions with streaming, tools, structured output,
   and multimodal chat content.
 - Responses API with typed text and multimodal input.
@@ -19,4 +21,3 @@ The project follows semantic versioning once public releases begin.
 - Raw compatibility escape hatches for POST, GET, and DELETE requests.
 - Configurable timeouts and conservative retries for JSON POST requests.
 - Examples and tests for core request builders and ergonomic helpers.
-

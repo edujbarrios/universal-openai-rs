@@ -48,9 +48,11 @@ mod images;
 mod models;
 mod moderations;
 mod audio;
+mod agents;
 mod prompt;
 mod responses;
 
+pub use agents::{AgentRun, AgentSpec, Agents};
 pub use chat::{
     ChatChoice, ChatCompletionRequest, ChatCompletionResponse, ChatContent,
     ChatContentPart, ChatMessage, ChatRequestBuilder, ChatRole, ChatStream,
@@ -95,8 +97,8 @@ pub use responses::{
 
 pub mod prelude {
     pub use crate::{
-        ChatContentPart, ChatMessage, Client, Config, Error, PromptBuilder,
-        Provider, ResponseContentPart, ResponseInput, ResponseInputItem, Result,
-        Tool,
+        AgentRun, AgentSpec, Agents, ChatContentPart, ChatMessage, Client,
+        Config, Error, PromptBuilder, Provider, ResponseContentPart,
+        ResponseInput, ResponseInputItem, Result, Tool,
     };
 }
