@@ -165,4 +165,3 @@ cargo doc --no-deps
 - [Provider compatibility](docs/providers.md)
 - [Implemented coverage](docs/status.md)
 - [Examples](examples/README.md)
-- [Release checklist](docs/release-checklist.md)
