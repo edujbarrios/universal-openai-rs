@@ -131,6 +131,9 @@ let moderation = client.moderate_text("Text to classify").await?;
 | Agents | `client.agents()` |
 | Engines | Legacy only via compatibility escape hatches |
 
+Vision inputs accept image URLs or base64 data URLs such as
+`data:image/png;base64,...`.
+
 ## Escape Hatch
 
 ```rust
@@ -163,4 +166,3 @@ cargo doc --no-deps
 - [Implemented coverage](docs/status.md)
 - [Examples](examples/README.md)
 - [Release checklist](docs/release-checklist.md)
-
