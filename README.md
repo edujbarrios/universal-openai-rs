@@ -6,6 +6,8 @@ A self-maintained, OpenAI-compatible API wrapper for Rust.
 the OpenAI API specification while making everyday Rust calls feel simple,
 predictable, and provider-agnostic.
 
+The design is simple by default and spec-compatible when needed.
+
 It is open source from the beginning and maintained under the GitHub identity
 `edujbarrios` by Eduardo J. Barrios.
 
@@ -14,6 +16,9 @@ It is open source from the beginning and maintained under the GitHub identity
 - Simple calls for common LLM workflows.
 - OpenAI-compatible request and response shapes.
 - Works with OpenAI-compatible providers through a configurable base URL.
+- Chat completions, streaming, embeddings, and Responses API support.
+- Structured output and tool calling without provider lock-in.
+- Configurable timeouts and retries for production-friendly usage.
 - Async-first HTTP client using `reqwest`.
 - Small, readable API surface that is easy to maintain.
 
@@ -27,9 +32,9 @@ use universal_openai_rs::Client;
 #[tokio::main]
 async fn main() -> universal_openai_rs::Result<()> {
     let client = Client::from_env()?;
-    let response = client.chat_text("gpt-4o-mini", "Write one sentence about Rust.").await?;
+    let text = client.ask("gpt-4o-mini", "Write one sentence about Rust.").await?;
 
-    println!("{}", response.first_text().unwrap_or_default());
+    println!("{text}");
     Ok(())
 }
 ```
@@ -59,25 +64,186 @@ By default, `Client::from_env()` reads:
 
 - `OPENAI_API_KEY`
 - `OPENAI_BASE_URL`, optional, defaults to `https://api.openai.com/v1`
+- `OPENAI_MODEL`, optional, used by `ask_default(...)` and `chat_default()`
+
+With `OPENAI_MODEL` set, the shortest call becomes:
+
+```rust
+let text = client.ask_default("Write one sentence about Rust.").await?;
+```
+
+You can also import the common surface with:
+
+```rust
+use universal_openai_rs::prelude::*;
+```
 
 ## Provider-Agnostic Usage
 
 ```rust
-use universal_openai_rs::{Client, Config};
+use universal_openai_rs::{Client, Config, Provider};
 
+let openrouter = Client::for_provider("your-api-key", Provider::OpenRouter)?;
+let local = Client::for_provider("ollama", Provider::Ollama)?;
+let custom = Client::compatible("your-api-key", "https://api.example.com/v1")?;
+```
+
+Any service that follows the OpenAI-compatible `/chat/completions` format can
+be called through the same client.
+
+You can still build a client manually when you want more control:
+
+```rust
 let client = Client::new(
     Config::new("your-api-key")
         .with_base_url("https://api.example.com/v1"),
 )?;
 ```
 
-Any service that follows the OpenAI-compatible `/chat/completions` format can
-be called through the same client.
+## Streaming
+
+```rust
+use futures_util::StreamExt;
+use universal_openai_rs::Client;
+
+let client = Client::from_env()?;
+let mut stream = client
+    .chat()
+    .model("gpt-4o-mini")
+    .user("Write a short Rust haiku.")
+    .stream()
+    .await?;
+
+while let Some(event) = stream.next().await {
+    for choice in event?.choices {
+        if let Some(text) = choice.delta.content {
+            print!("{text}");
+        }
+    }
+}
+```
+
+## Embeddings
+
+```rust
+let vector = client
+    .embed("text-embedding-3-small", "Rust makes API clients reliable.")
+    .await?;
+```
+
+## Responses API
+
+```rust
+let response = client
+    .respond_text("gpt-4o-mini", "Explain provider-agnostic APIs in one sentence.")
+    .await?;
+
+println!("{}", response.output_text.unwrap_or_default());
+```
+
+## Structured Output
+
+```rust
+use serde::Deserialize;
+use serde_json::json;
+
+#[derive(Debug, Deserialize)]
+struct EngineerProfile {
+    title: String,
+    strengths: Vec<String>,
+}
+
+let profile: EngineerProfile = client
+    .ask_json("gpt-4o-mini", "Return a compact profile for an AI engineer.")
+    .await?;
+```
+
+When you want to pass an explicit JSON schema:
+
+```rust
+let response = client
+    .chat()
+    .model("gpt-4o-mini")
+    .user("Return a compact profile for an AI engineer.")
+    .json_schema(
+        "engineer_profile",
+        json!({
+            "type": "object",
+            "properties": {
+                "title": {"type": "string"},
+                "strengths": {
+                    "type": "array",
+                    "items": {"type": "string"}
+                }
+            },
+            "required": ["title", "strengths"]
+        }),
+    )
+    .send()
+    .await?;
+```
+
+## OpenAI-Compatible Escape Hatch
+
+If a provider supports a new endpoint before this crate adds first-class types,
+send the OpenAI-compatible JSON yourself:
+
+```rust
+use serde_json::{json, Value};
+
+let response: Value = client
+    .send_compatible(
+        "chat/completions",
+        &json!({
+            "model": "gpt-4o-mini",
+            "messages": [{"role": "user", "content": "Hello"}]
+        }),
+    )
+    .await?;
+```
+
+## Tool Calling
+
+```rust
+use serde_json::json;
+use universal_openai_rs::Tool;
+
+let response = client
+    .chat()
+    .model("gpt-4o-mini")
+    .user("What should I pack for Madrid today?")
+    .tool(Tool::function(
+        "get_weather",
+        "Get weather for a city.",
+        json!({
+            "type": "object",
+            "properties": {
+                "city": {"type": "string"}
+            },
+            "required": ["city"]
+        }),
+    ))
+    .send()
+    .await?;
+```
+
+## Timeouts and Retries
+
+```rust
+use std::time::Duration;
+use universal_openai_rs::{Client, Config};
+
+let client = Client::new(
+    Config::new("your-api-key")
+        .with_timeout(Duration::from_secs(30))
+        .with_max_retries(3),
+)?;
+```
 
 ## Status
 
-This project is intentionally small and early. The first public milestone is a
-clean chat completions client, then streaming, embeddings, responses, and
-provider-specific compatibility notes.
+This project is intentionally small and early, but the first useful API surface
+now covers chat completions, streaming, embeddings, Responses API, structured
+output, tool calling, retries, timeouts, and provider-specific extension fields.
 
 See [ROADMAP.md](ROADMAP.md) for the public development path.
