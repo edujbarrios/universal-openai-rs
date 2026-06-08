@@ -78,6 +78,7 @@ impl ChatMessage {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum ChatContent {
+    Null,
     Text(String),
     Parts(Vec<ChatContentPart>),
 }
@@ -89,6 +90,7 @@ impl ChatContent {
 
     pub fn as_text(&self) -> Option<&str> {
         match self {
+            Self::Null => None,
             Self::Text(text) => Some(text),
             Self::Parts(_) => None,
         }
@@ -109,7 +111,19 @@ impl ChatContentPart {
 
     pub fn image_url(url: impl Into<String>) -> Self {
         Self::ImageUrl {
-            image_url: ImageUrl { url: url.into() },
+            image_url: ImageUrl {
+                url: url.into(),
+                detail: None,
+            },
+        }
+    }
+
+    pub fn image_url_detail(url: impl Into<String>, detail: impl Into<String>) -> Self {
+        Self::ImageUrl {
+            image_url: ImageUrl {
+                url: url.into(),
+                detail: Some(detail.into()),
+            },
         }
     }
 }
@@ -117,6 +131,9 @@ impl ChatContentPart {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ImageUrl {
     pub url: String,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub detail: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -266,6 +283,7 @@ impl ChatCompletionResponse {
             .into_iter()
             .next()
             .and_then(|choice| match choice.message.content {
+                ChatContent::Null => None,
                 ChatContent::Text(text) => Some(text),
                 ChatContent::Parts(_) => None,
             })

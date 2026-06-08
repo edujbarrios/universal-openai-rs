@@ -87,6 +87,36 @@ fn builds_multimodal_chat_message() {
 }
 
 #[test]
+fn deserializes_null_assistant_content_for_tool_calls() {
+    let value = json!({
+        "role": "assistant",
+        "content": null,
+        "tool_calls": [{
+            "id": "call_1",
+            "type": "function",
+            "function": {
+                "name": "get_weather",
+                "arguments": "{\"city\":\"Madrid\"}"
+            }
+        }]
+    });
+
+    let message: ChatMessage = serde_json::from_value(value).unwrap();
+
+    assert!(matches!(message.content, ChatContent::Null));
+    assert_eq!(message.tool_calls.unwrap()[0].function.name, "get_weather");
+}
+
+#[test]
+fn builds_image_part_with_detail() {
+    let part = ChatContentPart::image_url_detail("https://example.com/image.png", "high");
+    let serialized = serde_json::to_value(part).unwrap();
+
+    assert_eq!(serialized["type"], "image_url");
+    assert_eq!(serialized["image_url"]["detail"], "high");
+}
+
+#[test]
 fn builds_structured_output_and_tools_request() {
     let client = Client::new(Config::new("test-key")).unwrap();
 
