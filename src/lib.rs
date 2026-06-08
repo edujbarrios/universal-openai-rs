@@ -38,8 +38,15 @@
 mod chat;
 mod client;
 mod config;
+mod completions;
 mod embeddings;
 mod error;
+mod files;
+mod fine_tuning;
+mod images;
+mod models;
+mod moderations;
+mod audio;
 mod prompt;
 mod responses;
 
@@ -51,11 +58,33 @@ pub use chat::{
 };
 pub use client::Client;
 pub use config::{Config, Provider};
+pub use completions::{
+    CompletionChoice, CompletionPrompt, CompletionRequest, CompletionRequestBuilder,
+    CompletionResponse,
+};
 pub use embeddings::{
     EmbeddingData, EmbeddingInput, EmbeddingUsage, EmbeddingsRequest,
     EmbeddingsRequestBuilder, EmbeddingsResponse,
 };
 pub use error::{Error, Result};
+pub use files::{
+    DeletedFile, FileObject, FileUploadBuilder, Files, ListFilesResponse, UploadedFile,
+};
+pub use fine_tuning::{
+    FineTuning, FineTuningJob, FineTuningJobRequest, FineTuningJobRequestBuilder,
+    ListFineTuningJobsResponse,
+};
+pub use images::{
+    ImageData, ImageGenerationRequest, ImageResponse, ImagesRequestBuilder,
+};
+pub use models::{DeletedModel, ListModelsResponse, Model, Models};
+pub use moderations::{
+    ModerationCategoryScores, ModerationInput, ModerationRequest,
+    ModerationRequestBuilder, ModerationResponse, ModerationResult,
+};
+pub use audio::{
+    Audio, AudioResponse, TranscriptionBuilder, TranslationBuilder,
+};
 pub use prompt::PromptBuilder;
 pub use responses::{
     ResponseInput, ResponseRequestBuilder, ResponsesRequest, ResponsesResponse,

@@ -1,7 +1,9 @@
 use crate::{
     ChatCompletionResponse, ChatRequestBuilder, ChatStream, ChatStreamEvent, Config,
-    EmbeddingsRequestBuilder, EmbeddingsResponse, Error, Provider, ResponseRequestBuilder,
-    ResponsesResponse, Result, PromptBuilder,
+    CompletionRequestBuilder, CompletionResponse, EmbeddingsRequestBuilder,
+    EmbeddingsResponse, Error, FileUploadBuilder, Files, FineTuning, ImagesRequestBuilder,
+    Models, ModerationRequestBuilder, Provider, ResponseRequestBuilder, ResponsesResponse,
+    Result, Audio, PromptBuilder,
 };
 use futures_util::StreamExt;
 use std::time::Duration;
@@ -52,6 +54,10 @@ impl Client {
         ChatRequestBuilder::new(self)
     }
 
+    pub fn completions(&self) -> CompletionRequestBuilder<'_> {
+        CompletionRequestBuilder::new(self)
+    }
+
     pub fn prompt(&self, prompt: impl Into<String>) -> PromptBuilder<'_> {
         PromptBuilder::new(self, prompt)
     }
@@ -69,8 +75,36 @@ impl Client {
         EmbeddingsRequestBuilder::new(self)
     }
 
+    pub fn images(&self) -> ImagesRequestBuilder<'_> {
+        ImagesRequestBuilder::new(self)
+    }
+
+    pub fn moderations(&self) -> ModerationRequestBuilder<'_> {
+        ModerationRequestBuilder::new(self)
+    }
+
     pub fn responses(&self) -> ResponseRequestBuilder<'_> {
         ResponseRequestBuilder::new(self)
+    }
+
+    pub fn models(&self) -> Models<'_> {
+        Models::new(self)
+    }
+
+    pub fn files(&self) -> Files<'_> {
+        Files::new(self)
+    }
+
+    pub fn upload_file(&self, purpose: impl Into<String>) -> FileUploadBuilder<'_> {
+        FileUploadBuilder::new(self, purpose)
+    }
+
+    pub fn audio(&self) -> Audio<'_> {
+        Audio::new(self)
+    }
+
+    pub fn fine_tuning(&self) -> FineTuning<'_> {
+        FineTuning::new(self)
     }
 
     pub async fn chat_text(
@@ -79,6 +113,18 @@ impl Client {
         prompt: impl Into<String>,
     ) -> Result<ChatCompletionResponse> {
         self.chat().model(model).user(prompt).send().await
+    }
+
+    pub async fn complete_text(
+        &self,
+        model: impl Into<String>,
+        prompt: impl Into<String>,
+    ) -> Result<CompletionResponse> {
+        self.completions().model(model).prompt(prompt).send().await
+    }
+
+    pub async fn list_models(&self) -> Result<crate::ListModelsResponse> {
+        self.models().list().await
     }
 
     pub async fn ask(&self, model: impl Into<String>, prompt: impl Into<String>) -> Result<String> {
@@ -154,6 +200,49 @@ impl Client {
             .vectors())
     }
 
+    pub async fn generate_image(
+        &self,
+        model: impl Into<String>,
+        prompt: impl Into<String>,
+    ) -> Result<crate::ImageResponse> {
+        self.images().model(model).prompt(prompt).generate().await
+    }
+
+    pub async fn moderate_text(
+        &self,
+        input: impl Into<String>,
+    ) -> Result<crate::ModerationResponse> {
+        self.moderations().input(input).send().await
+    }
+
+    pub async fn transcribe(
+        &self,
+        model: impl Into<String>,
+        filename: impl Into<String>,
+        bytes: impl Into<Vec<u8>>,
+    ) -> Result<crate::AudioResponse> {
+        self.audio()
+            .transcription()
+            .model(model)
+            .file(filename, bytes)
+            .send()
+            .await
+    }
+
+    pub async fn translate_audio(
+        &self,
+        model: impl Into<String>,
+        filename: impl Into<String>,
+        bytes: impl Into<Vec<u8>>,
+    ) -> Result<crate::AudioResponse> {
+        self.audio()
+            .translation()
+            .model(model)
+            .file(filename, bytes)
+            .send()
+            .await
+    }
+
     pub async fn respond_text(
         &self,
         model: impl Into<String>,
@@ -168,6 +257,53 @@ impl Client {
         R: serde::de::DeserializeOwned,
     {
         self.post_json(path, body).await
+    }
+
+    pub(crate) async fn get_json<R>(&self, path: &str) -> Result<R>
+    where
+        R: serde::de::DeserializeOwned,
+    {
+        let response = self
+            .http
+            .get(self.config.endpoint(path)?)
+            .bearer_auth(self.config.api_key())
+            .send()
+            .await?;
+
+        self.parse_response(response).await
+    }
+
+    pub(crate) async fn delete_json<R>(&self, path: &str) -> Result<R>
+    where
+        R: serde::de::DeserializeOwned,
+    {
+        let response = self
+            .http
+            .delete(self.config.endpoint(path)?)
+            .bearer_auth(self.config.api_key())
+            .send()
+            .await?;
+
+        self.parse_response(response).await
+    }
+
+    pub(crate) async fn post_multipart<R>(
+        &self,
+        path: &str,
+        form: reqwest::multipart::Form,
+    ) -> Result<R>
+    where
+        R: serde::de::DeserializeOwned,
+    {
+        let response = self
+            .http
+            .post(self.config.endpoint(path)?)
+            .bearer_auth(self.config.api_key())
+            .multipart(form)
+            .send()
+            .await?;
+
+        self.parse_response(response).await
     }
 
     pub(crate) async fn post_json<T, R>(&self, path: &str, body: &T) -> Result<R>
@@ -189,7 +325,7 @@ impl Client {
 
             match response {
                 Ok(response) if response.status().is_success() => {
-                    return Ok(response.json::<R>().await?);
+                    return self.parse_response(response).await;
                 }
                 Ok(response) if self.should_retry(response.status(), attempt) => {
                     attempt += 1;
@@ -207,6 +343,19 @@ impl Client {
                 Err(error) => return Err(Error::Http(error)),
             }
         }
+    }
+
+    async fn parse_response<R>(&self, response: reqwest::Response) -> Result<R>
+    where
+        R: serde::de::DeserializeOwned,
+    {
+        let status = response.status();
+        if !status.is_success() {
+            let body = response.text().await.unwrap_or_default();
+            return Err(Error::Api { status, body });
+        }
+
+        Ok(response.json::<R>().await?)
     }
 
     pub(crate) async fn post_sse<T>(&self, path: &str, body: &T) -> Result<ChatStream>
