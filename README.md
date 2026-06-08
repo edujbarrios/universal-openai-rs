@@ -288,6 +288,22 @@ let response = client
 println!("{}", response.output_text.unwrap_or_default());
 ```
 
+Responses can also use typed multimodal input:
+
+```rust
+use universal_openai_rs::ResponseContentPart;
+
+let response = client
+    .responses()
+    .model("gpt-4o-mini")
+    .user_parts(vec![
+        ResponseContentPart::text("Describe this image in one sentence."),
+        ResponseContentPart::image_url("https://example.com/image.png"),
+    ])
+    .send()
+    .await?;
+```
+
 ## Structured Output
 
 ```rust
