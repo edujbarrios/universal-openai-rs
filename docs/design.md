@@ -64,8 +64,9 @@ let agents = client
     .simple("agent1", "Answer as a concise Rust AI engineer.")
     .simple("agent2", "Review the answer and suggest one improvement.");
 
-let first = agents.agent1("Design a simple API call.").await?;
-let second = agents.agent2(first.output).await?;
+let draft = agents.agent1("Design a simple API call.").await?;
+let review_task = format!("Improve this draft:\n\n{}", draft.output);
+let reviewed = agents.agent2(review_task).await?;
 ```
 
 For chained work, `sequence(...)` runs agents in order and passes each output to

@@ -7,16 +7,20 @@ async fn main() -> Result<()> {
     let agents = client
         .agents()
         .default_model("gpt-4o-mini")
-        .simple("agent1", "Answer as a concise Rust AI engineer.")
-        .simple("agent2", "Review the answer and suggest one improvement.");
+        .simple("agent1", "Draft a concise technical answer.")
+        .simple("agent2", "Review and improve the draft.");
 
-    let run = agents
-        .sequence(
-            ["agent1", "agent2"],
-            "Design a simple OpenAI-compatible Rust API call.",
-        )
+    let draft = agents
+        .agent1("Design a simple OpenAI-compatible Rust API call.")
         .await?;
 
-    println!("{}", run.output);
+    let review_task = format!(
+        "Use this draft as context, then improve it for a Rust developer:\n\n{}",
+        draft.output
+    );
+
+    let reviewed = agents.agent2(review_task).await?;
+
+    println!("{}", reviewed.output);
     Ok(())
 }

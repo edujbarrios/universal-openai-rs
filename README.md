@@ -68,17 +68,27 @@ let agents = client
     .simple("agent1", "Draft a concise technical answer.")
     .simple("agent2", "Review and improve the draft.");
 
+let draft = agents
+    .agent1("Design a simple OpenAI-compatible Rust call.")
+    .await?;
+
+let review_task = format!(
+    "Use this draft as context, then improve it for a Rust developer:\n\n{}",
+    draft.output
+);
+
+let reviewed = agents.agent2(review_task).await?;
+
+println!("{}", reviewed.output);
+```
+
+For simple pipelines, `sequence(...)` runs agents in order and passes each
+output to the next agent:
+
+```rust
 let run = agents
     .sequence(["agent1", "agent2"], "Design a simple OpenAI-compatible Rust call.")
     .await?;
-
-println!("{}", run.output);
-```
-
-You can also run an individual agent:
-
-```rust
-let result = agents.agent1("Summarize provider-agnostic APIs.").await?;
 ```
 
 ## Provider-Agnostic Usage
