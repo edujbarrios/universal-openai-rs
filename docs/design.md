@@ -2,9 +2,10 @@
 
 `universal-openai-rs` is designed around a simple principle:
 
-Make OpenAI-compatible API calls easy and well structured in Rust, with a strong
-focus on composing those calls into lightweight agent workflows without hiding
-the underlying API shape.
+Make OpenAI-compatible API calls easy and well structured in Rust, with agent
+simplicity as a primary design goal. The wrapper should make it natural to
+compose calls into lightweight agent workflows without hiding the underlying API
+shape.
 
 ## Simple by Default
 

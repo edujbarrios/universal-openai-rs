@@ -3,18 +3,22 @@
 [![CI](https://github.com/edujbarrios/universal-openai-rs/actions/workflows/ci.yml/badge.svg)](https://github.com/edujbarrios/universal-openai-rs/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-`universal-openai-rs` is a self-maintained wrapper for OpenAI-compatible APIs in
-Rust, optimized for simple agent-oriented workflows.
+`universal-openai-rs` is a self-maintained, OpenAI-compatible APIs wrapper for
+Rust. Optimized for Agents.
 
-The goal is straightforward: make AI API calls in Rust easy to write, easy to
-read, and especially easy to compose into lightweight agents, while staying
-close to the OpenAI-compatible request/response format when you need full
-control.
+The main purpose is to make AI API calls in Rust simple to write, simple to
+read, and especially simple to compose into lightweight agent workflows, while
+staying close to the OpenAI-compatible request/response format when you need
+full control.
 
 ## About
 
-A self-maintained, OpenAI-compatible APIs wrapper for Rust. Optimized for agents
-and built around a simple API surface.
+A self-maintained, OpenAI-compatible APIs wrapper for Rust. Optimized for
+Agents.
+
+This wrapper puts a huge focus on simplicity while working with agents: define
+small named agents, pass tasks between them, and keep the underlying API calls
+provider-compatible.
 
 ## What This Project Is
 
@@ -28,7 +32,7 @@ This is an AI engineering utility crate for:
 - keeping escape hatches for provider-specific or newly released endpoints.
 
 It is designed for local development, experimentation, and open source evolution,
-with a strong focus on making agent usage simple.
+with agent simplicity as a primary design goal.
 
 ## Install Status
 
