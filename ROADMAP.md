@@ -44,3 +44,4 @@ the simple path harder to use.
 - Document provider differences.
 - Keep examples for OpenAI-compatible local and hosted APIs.
 - Avoid provider lock-in in the core crate.
+- Maintain provider preset notes as APIs evolve.

@@ -315,4 +315,5 @@ output, tool calling, retries, timeouts, and provider-specific extension fields.
 
 See [ROADMAP.md](ROADMAP.md) for the public development path.
 
-See [docs/design.md](docs/design.md) for the design philosophy.
+See [docs/design.md](docs/design.md) for the design philosophy and
+[docs/providers.md](docs/providers.md) for provider compatibility notes.
