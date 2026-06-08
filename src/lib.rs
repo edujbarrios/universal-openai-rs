@@ -51,13 +51,14 @@ mod models;
 mod moderations;
 mod prompt;
 mod responses;
+mod streaming;
 
 pub use agents::{AgentChainRun, AgentRun, AgentSpec, Agents};
 pub use audio::{Audio, AudioResponse, TranscriptionBuilder, TranslationBuilder};
 pub use chat::{
     ChatChoice, ChatCompletionRequest, ChatCompletionResponse, ChatContent, ChatContentPart,
-    ChatMessage, ChatRequestBuilder, ChatRole, ChatStream, ChatStreamChoice, ChatStreamDelta,
-    ChatStreamEvent, ChatStreamToolCall, ChatStreamToolCallFunction, FunctionTool, ImageUrl, Tool,
+    ChatMessage, ChatRequestBuilder, ChatRole, ChatStreamChoice, ChatStreamDelta, ChatStreamEvent,
+    ChatStreamToolCall, ChatStreamToolCallFunction, FunctionTool, ImageUrl, Tool,
     ToolCall, ToolCallFunction, Usage,
 };
 pub use client::Client;
@@ -89,11 +90,16 @@ pub use responses::{
     ResponseContentPart, ResponseInput, ResponseInputItem, ResponseRequestBuilder,
     ResponsesRequest, ResponsesResponse,
 };
+pub use streaming::{
+    ChatStream, JsonLinesDecoder, LenientSseDecoder, OpenAiSseDecoder, StreamDecoder,
+    TextChunkStream,
+};
 
 pub mod prelude {
     pub use crate::{
         AgentChainRun, AgentRun, AgentSpec, Agents, ApiError, ChatContentPart, ChatMessage, Client,
-        Config, Error, PromptBuilder, Provider, ResponseContentPart, ResponseInput,
-        ResponseInputItem, Result, RetryConfig, Tool,
+        Config, Error, JsonLinesDecoder, LenientSseDecoder, OpenAiSseDecoder, PromptBuilder,
+        Provider, ResponseContentPart, ResponseInput, ResponseInputItem, Result, RetryConfig,
+        StreamDecoder, TextChunkStream, Tool,
     };
 }

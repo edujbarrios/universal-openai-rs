@@ -158,6 +158,40 @@ let response = client
     .await?;
 ```
 
+## Streaming
+
+Use event streams when you need full typed deltas, including tool call deltas.
+Use text chunks when you want to render output as it arrives.
+
+```rust
+use futures_util::StreamExt;
+
+let mut chunks = client
+    .chat()
+    .model("gpt-4o-mini")
+    .user("Write a short Rust haiku.")
+    .stream_text_chunks()
+    .await?;
+
+while let Some(chunk) = chunks.next().await {
+    print!("{}", chunk?);
+}
+```
+
+`stream_events()` returns typed `ChatStreamEvent` values. `stream()` remains as a
+backward-compatible alias for `stream_events()`.
+
+For providers that do not emit strict OpenAI SSE, pass another decoder:
+
+```rust
+let events = client
+    .chat()
+    .model("local-model")
+    .user("Hello")
+    .stream_events_with_decoder(universal_openai_rs::LenientSseDecoder::new())
+    .await?;
+```
+
 ## Provider-Agnostic Clients
 
 ```rust

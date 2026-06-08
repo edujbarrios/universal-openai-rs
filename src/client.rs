@@ -3,9 +3,8 @@ use crate::{
     ChatStreamEvent, CompletionRequestBuilder, CompletionResponse, Config, EmbeddingsRequestBuilder,
     EmbeddingsResponse, Error, FileUploadBuilder, Files, FineTuning, ImagesRequestBuilder, Models,
     ModerationRequestBuilder, PromptBuilder, Provider, ResponseRequestBuilder, ResponsesResponse,
-    Result,
+    OpenAiSseDecoder, Result, StreamDecoder,
 };
-use futures_util::StreamExt;
 use reqwest::{header::HeaderMap, RequestBuilder};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
@@ -380,10 +379,22 @@ impl Client {
     where
         T: serde::Serialize + ?Sized,
     {
+        self.post_stream(path, body, OpenAiSseDecoder::new()).await
+    }
+
+    pub(crate) async fn post_stream<T, D>(
+        &self,
+        path: &str,
+        body: &T,
+        decoder: D,
+    ) -> Result<ChatStream>
+    where
+        T: serde::Serialize + ?Sized,
+        D: StreamDecoder<Event = ChatStreamEvent> + Send + 'static,
+    {
+        let endpoint = self.config.endpoint(path)?;
         let response = self
-            .authorized(self.http.post(self.config.endpoint(path)?))?
-            .json(body)
-            .send()
+            .send_with_retries(|| Ok(self.authorized(self.http.post(&endpoint))?.json(body)))
             .await?;
 
         let status = response.status();
@@ -391,35 +402,7 @@ impl Client {
             return Err(self.api_error(response).await);
         }
 
-        let mut bytes = response.bytes_stream();
-        let stream = async_stream::try_stream! {
-            let mut buffer = String::new();
-
-            while let Some(chunk) = bytes.next().await {
-                let chunk = chunk?;
-                buffer.push_str(&String::from_utf8_lossy(&chunk));
-
-                while let Some(newline) = buffer.find('\n') {
-                    let line: String = buffer.drain(..=newline).collect();
-                    let line = line.trim();
-
-                    if line.is_empty() || line.starts_with("event:") {
-                        continue;
-                    }
-
-                    if let Some(data) = line.strip_prefix("data:") {
-                        let data = data.trim();
-                        if data == "[DONE]" {
-                            return;
-                        }
-
-                        yield serde_json::from_str::<ChatStreamEvent>(data)?;
-                    }
-                }
-            }
-        };
-
-        Ok(Box::pin(stream))
+        Ok(crate::streaming::decode_response_stream(response, decoder))
     }
 
     fn authorized(&self, request: RequestBuilder) -> Result<RequestBuilder> {

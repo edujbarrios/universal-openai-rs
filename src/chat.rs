@@ -1,11 +1,8 @@
 use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::pin::Pin;
 
-use crate::{Client, Error, Result};
-
-pub type ChatStream = Pin<Box<dyn futures_core::Stream<Item = Result<ChatStreamEvent>> + Send>>;
+use crate::{ChatStream, Client, Error, Result, StreamDecoder, TextChunkStream};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -443,23 +440,38 @@ impl<'a> ChatRequestBuilder<'a> {
         self.client.post_json("chat/completions", &request).await
     }
 
-    pub async fn stream(mut self) -> Result<ChatStream> {
+    pub async fn stream_events(mut self) -> Result<ChatStream> {
         self.stream = Some(true);
         let request = self.build()?;
         self.client.post_sse("chat/completions", &request).await
     }
 
+    pub async fn stream_events_with_decoder<D>(mut self, decoder: D) -> Result<ChatStream>
+    where
+        D: StreamDecoder<Event = ChatStreamEvent> + Send + 'static,
+    {
+        self.stream = Some(true);
+        let request = self.build()?;
+        self.client
+            .post_stream("chat/completions", &request, decoder)
+            .await
+    }
+
+    pub async fn stream(self) -> Result<ChatStream> {
+        self.stream_events().await
+    }
+
+    pub async fn stream_text_chunks(self) -> Result<TextChunkStream> {
+        let events = self.stream_events().await?;
+        Ok(crate::streaming::text_chunks_from_events(events))
+    }
+
     pub async fn stream_text(self) -> Result<String> {
-        let mut stream = self.stream().await?;
+        let mut stream = self.stream_text_chunks().await?;
         let mut output = String::new();
 
-        while let Some(event) = stream.next().await {
-            let event = event?;
-            for choice in event.choices {
-                if let Some(text) = choice.delta.content {
-                    output.push_str(&text);
-                }
-            }
+        while let Some(chunk) = stream.next().await {
+            output.push_str(&chunk?);
         }
 
         Ok(output)

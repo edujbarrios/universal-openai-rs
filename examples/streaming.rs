@@ -8,16 +8,11 @@ async fn main() -> universal_openai_rs::Result<()> {
         .chat()
         .model("gpt-4o-mini")
         .user("Write a short Rust haiku.")
-        .stream()
+        .stream_text_chunks()
         .await?;
 
-    while let Some(event) = stream.next().await {
-        let event = event?;
-        for choice in event.choices {
-            if let Some(text) = choice.delta.content {
-                print!("{text}");
-            }
-        }
+    while let Some(chunk) = stream.next().await {
+        print!("{}", chunk?);
     }
 
     Ok(())

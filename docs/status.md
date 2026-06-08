@@ -14,6 +14,8 @@ simple agent-oriented workflows.
 - Native lightweight agent-style workflows, including sequential agent chains.
 - Streaming chat completions.
 - Typed streaming deltas.
+- Testable streaming decoders for OpenAI SSE, lenient SSE, and JSON Lines.
+- Text chunk streaming helpers for UI and CLI use.
 - Structured output helpers.
 - Tool calling helpers.
 - Vision and multimodal chat.

@@ -59,10 +59,9 @@ If the endpoint itself is missing, use `send_compatible(...)`,
 
 ## Streaming Differences
 
-Streaming assumes Server-Sent Events with `data:` lines and `[DONE]` as the end
-marker. Some local or proxy providers may format streaming differently. In that
-case, use non-streaming `.send()` or open an issue with the provider response
-shape.
+Default chat streaming uses OpenAI-style Server-Sent Events with `data:` lines
+and `[DONE]` as the end marker. The crate also includes lenient SSE and JSON
+Lines decoders for providers or proxies that format streams differently.
 
 ## Multipart Audio and File Uploads
 
@@ -79,4 +78,3 @@ upload API. For now, prefer reasonably sized inputs.
 
 The legacy `Engines` API is not first-class. Use compatibility escape hatches if
 a provider still exposes it.
-
