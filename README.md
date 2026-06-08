@@ -64,6 +64,21 @@ that shape available, but wraps it with a Rust-friendly experience:
 | Responses API | `client.respond_text(...)` | `client.responses().send()` |
 | Provider-specific fields | `.extra(...)` | `.send_compatible(...)` |
 
+## Endpoint Coverage
+
+| API area | First-class support | Entry point |
+| --- | --- | --- |
+| Models | Yes | `client.list_models()` / `client.models()` |
+| Completions | Yes | `client.complete_text(...)` / `client.completions()` |
+| Chat | Yes | `client.chat()` / `client.prompt(...)` |
+| Images | Yes | `client.generate_image(...)` / `client.images()` |
+| Embeddings | Yes | `client.embeddings()` / `client.embed(...)` |
+| Audio | Yes | `client.transcribe(...)` / `client.audio()` |
+| Files | Yes | `client.files()` / `client.upload_file(...)` |
+| Fine-tuning | Yes | `client.fine_tuning()` |
+| Moderations | Yes | `client.moderate_text(...)` / `client.moderations()` |
+| Engines | No first-class API | Use `send_compatible(...)` for legacy providers |
+
 ## Quick Start
 
 For the shortest common path:
@@ -193,6 +208,59 @@ let vector = client
     .await?;
 ```
 
+## Images
+
+```rust
+let image = client
+    .images()
+    .model("gpt-image-1")
+    .prompt("A clean Rust API diagram")
+    .size("1024x1024")
+    .b64_json()
+    .generate()
+    .await?;
+```
+
+## Audio
+
+```rust
+let transcript = client
+    .audio()
+    .transcription()
+    .model("whisper-1")
+    .file("meeting.mp3", audio_bytes)
+    .send()
+    .await?;
+```
+
+## Files and Fine-Tuning
+
+```rust
+let file = client
+    .upload_file("fine-tune")
+    .bytes("training.jsonl", training_bytes)
+    .send()
+    .await?;
+
+let job = client
+    .fine_tuning()
+    .create()
+    .model("gpt-4o-mini")
+    .training_file(file.id)
+    .send()
+    .await?;
+```
+
+## Moderations
+
+```rust
+let moderation = client
+    .moderations()
+    .input("Text to classify")
+    .send()
+    .await?;
+```
+
 ## Responses API
 
 ```rust
@@ -273,6 +341,8 @@ let response: Value = client
     )
     .await?;
 ```
+
+This is also the intended path for legacy `Engines` endpoints.
 
 ## Tool Calling
 

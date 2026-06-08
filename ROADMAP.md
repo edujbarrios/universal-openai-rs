@@ -5,6 +5,8 @@ the simple path harder to use.
 
 ## Milestone 1: Chat Completions
 
+- Models API.
+- Legacy completions API.
 - Builder API for `/chat/completions`.
 - One-call text helper for simple prompts.
 - OpenAI-compatible JSON request and response structures.
@@ -25,6 +27,8 @@ the simple path harder to use.
 - Typed embedding responses.
 - Batch helper methods.
 - One-call text embedding helper.
+- Image generation API.
+- Audio transcription and translation API.
 
 ## Milestone 4: Responses API
 
@@ -38,6 +42,14 @@ the simple path harder to use.
 - Configurable request timeout.
 - Retries for rate limits, server errors, timeouts, and connection failures.
 - Conservative retry backoff.
+- Files API for upload/list/retrieve/delete.
+- Fine-tuning jobs API.
+- Moderations API.
+
+## Legacy Endpoints
+
+- `Engines` is intentionally not first-class because it is a legacy surface.
+- Use `send_compatible(...)` for providers that still expose engines-compatible paths.
 
 ## Milestone 6: Compatibility Notes
 

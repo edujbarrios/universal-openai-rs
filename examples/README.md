@@ -18,6 +18,13 @@ path first, then reveal lower-level OpenAI-compatible control only when needed.
 | `providers.rs` | Provider presets such as Ollama |
 | `escape_hatch.rs` | Raw OpenAI-compatible JSON calls |
 | `default_model.rs` | `OPENAI_MODEL` and `ask_default(...)` |
+| `models.rs` | Model listing |
+| `completions.rs` | Legacy text completions |
+| `images.rs` | Image generation |
+| `audio.rs` | Audio transcription |
+| `files.rs` | File upload |
+| `fine_tuning.rs` | Fine-tuning job creation |
+| `moderations.rs` | Content moderation |
 
 Run an example with:
 
@@ -31,4 +38,3 @@ Set these environment variables first:
 OPENAI_API_KEY=replace-me
 OPENAI_MODEL=gpt-4o-mini
 ```
-
