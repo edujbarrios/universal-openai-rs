@@ -28,9 +28,10 @@ simple agent-oriented workflows.
 - Configurable request timeouts.
 - Custom `reqwest::Client` injection for production HTTP configuration.
 - User-Agent, organization, project, and provider-specific request headers.
+- Configurable retries with backoff, jitter, `Retry-After`, and broader method
+  coverage.
 - Structured API errors with raw body, provider code, parameter, type, and
   request id extraction.
-- Conservative retry support for JSON POST requests.
 - Provider presets and custom OpenAI-compatible base URLs.
 - Raw compatibility escape hatches for POST, GET, and DELETE.
 

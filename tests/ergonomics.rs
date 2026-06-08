@@ -1,7 +1,9 @@
+use std::time::Duration;
+
 use serde::Deserialize;
 use universal_openai_rs::{
     ApiError, ChatChoice, ChatCompletionResponse, ChatMessage, Client, Config, EmbeddingData,
-    EmbeddingsResponse, Error, Provider, ResponsesResponse,
+    EmbeddingsResponse, Error, Provider, ResponsesResponse, RetryConfig,
 };
 
 #[derive(Debug, Deserialize, PartialEq, Eq)]
@@ -38,6 +40,28 @@ fn config_stores_production_http_headers() {
     assert_eq!(config.organization(), Some("org-test"));
     assert_eq!(config.project(), Some("proj-test"));
     assert_eq!(config.headers().len(), 1);
+}
+
+#[test]
+fn config_accepts_full_retry_configuration() {
+    let retry = RetryConfig {
+        max_retries: 5,
+        initial_backoff: Duration::from_millis(250),
+        max_backoff: Duration::from_secs(10),
+        jitter: false,
+        respect_retry_after: true,
+    };
+    let config = Config::new("test-key").with_retry_config(retry.clone());
+
+    assert_eq!(config.retry_config(), &retry);
+    assert_eq!(config.max_retries(), 5);
+}
+
+#[test]
+fn max_retries_keeps_backward_compatible_builder() {
+    let config = Config::new("test-key").with_max_retries(4);
+
+    assert_eq!(config.retry_config().max_retries, 4);
 }
 
 #[test]

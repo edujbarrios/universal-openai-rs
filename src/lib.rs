@@ -65,7 +65,7 @@ pub use completions::{
     CompletionChoice, CompletionPrompt, CompletionRequest, CompletionRequestBuilder,
     CompletionResponse,
 };
-pub use config::{Config, Provider};
+pub use config::{Config, Provider, RetryConfig};
 pub use embeddings::{
     EmbeddingData, EmbeddingInput, EmbeddingUsage, EmbeddingsRequest, EmbeddingsRequestBuilder,
     EmbeddingsResponse,
@@ -94,6 +94,6 @@ pub mod prelude {
     pub use crate::{
         AgentChainRun, AgentRun, AgentSpec, Agents, ApiError, ChatContentPart, ChatMessage, Client,
         Config, Error, PromptBuilder, Provider, ResponseContentPart, ResponseInput,
-        ResponseInputItem, Result, Tool,
+        ResponseInputItem, Result, RetryConfig, Tool,
     };
 }

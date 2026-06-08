@@ -71,16 +71,24 @@ impl<'a> FileUploadBuilder<'a> {
             .bytes
             .ok_or_else(|| Error::InvalidConfig("file bytes are required".to_string()))?;
 
-        let part = reqwest::multipart::Part::bytes(bytes).file_name(filename);
-        let mut form = reqwest::multipart::Form::new()
-            .text("purpose", self.purpose)
-            .part("file", part);
+        let purpose = self.purpose;
+        let extra = self.extra;
 
-        for (key, value) in self.extra {
-            form = form.text(key, value);
-        }
+        self.client
+            .post_multipart("files", || {
+                let part =
+                    reqwest::multipart::Part::bytes(bytes.clone()).file_name(filename.clone());
+                let mut form = reqwest::multipart::Form::new()
+                    .text("purpose", purpose.clone())
+                    .part("file", part);
 
-        self.client.post_multipart("files", form).await
+                for (key, value) in &extra {
+                    form = form.text(key.clone(), value.clone());
+                }
+
+                Ok(form)
+            })
+            .await
     }
 }
 

@@ -9,12 +9,33 @@ pub struct Config {
     api_key: String,
     base_url: String,
     timeout: Option<Duration>,
-    max_retries: usize,
+    retry: RetryConfig,
     default_model: Option<String>,
     user_agent: Option<String>,
     organization: Option<String>,
     project: Option<String>,
     headers: Vec<(String, String)>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RetryConfig {
+    pub max_retries: usize,
+    pub initial_backoff: Duration,
+    pub max_backoff: Duration,
+    pub jitter: bool,
+    pub respect_retry_after: bool,
+}
+
+impl Default for RetryConfig {
+    fn default() -> Self {
+        Self {
+            max_retries: 2,
+            initial_backoff: Duration::from_millis(100),
+            max_backoff: Duration::from_secs(30),
+            jitter: true,
+            respect_retry_after: true,
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -46,7 +67,7 @@ impl Config {
             api_key: api_key.into(),
             base_url: DEFAULT_BASE_URL.to_string(),
             timeout: Some(Duration::from_secs(60)),
-            max_retries: 2,
+            retry: RetryConfig::default(),
             default_model: None,
             user_agent: None,
             organization: None,
@@ -90,7 +111,12 @@ impl Config {
     }
 
     pub fn with_max_retries(mut self, max_retries: usize) -> Self {
-        self.max_retries = max_retries;
+        self.retry.max_retries = max_retries;
+        self
+    }
+
+    pub fn with_retry_config(mut self, retry: RetryConfig) -> Self {
+        self.retry = retry;
         self
     }
 
@@ -132,7 +158,11 @@ impl Config {
     }
 
     pub fn max_retries(&self) -> usize {
-        self.max_retries
+        self.retry.max_retries
+    }
+
+    pub fn retry_config(&self) -> &RetryConfig {
+        &self.retry
     }
 
     pub fn default_model(&self) -> Option<&str> {

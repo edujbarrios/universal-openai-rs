@@ -193,6 +193,23 @@ let config = Config::new("your-api-key")
 let client = Client::with_http_client(config, http)?;
 ```
 
+Retries are configurable and apply to retryable GET, DELETE, multipart, JSON
+POST, timeout, and connection failures. `Retry-After` is respected by default on
+rate limits.
+
+```rust
+use std::time::Duration;
+use universal_openai_rs::{Config, RetryConfig};
+
+let config = Config::new("your-api-key").with_retry_config(RetryConfig {
+    max_retries: 5,
+    initial_backoff: Duration::from_millis(250),
+    max_backoff: Duration::from_secs(20),
+    jitter: true,
+    respect_retry_after: true,
+});
+```
+
 ## Adding an OpenAI-Compatible Third-Party API
 
 Any provider that exposes an OpenAI-compatible `/v1` API can be used by changing

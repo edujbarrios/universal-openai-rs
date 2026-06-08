@@ -6,8 +6,8 @@ use crate::{
     Result,
 };
 use futures_util::StreamExt;
-use reqwest::RequestBuilder;
-use std::time::Duration;
+use reqwest::{header::HeaderMap, RequestBuilder};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 #[derive(Debug, Clone)]
 pub struct Client {
@@ -296,18 +296,18 @@ impl Client {
     where
         R: serde::de::DeserializeOwned,
     {
+        let endpoint = self.config.endpoint(path)?;
         let response = self
-            .authorized(self.http.get(self.config.endpoint(path)?))?
-            .send()
+            .send_with_retries(|| self.authorized(self.http.get(&endpoint)))
             .await?;
 
         self.parse_response(response).await
     }
 
     pub(crate) async fn get_bytes(&self, path: &str) -> Result<Vec<u8>> {
+        let endpoint = self.config.endpoint(path)?;
         let response = self
-            .authorized(self.http.get(self.config.endpoint(path)?))?
-            .send()
+            .send_with_retries(|| self.authorized(self.http.get(&endpoint)))
             .await?;
 
         let status = response.status();
@@ -322,26 +322,30 @@ impl Client {
     where
         R: serde::de::DeserializeOwned,
     {
+        let endpoint = self.config.endpoint(path)?;
         let response = self
-            .authorized(self.http.delete(self.config.endpoint(path)?))?
-            .send()
+            .send_with_retries(|| self.authorized(self.http.delete(&endpoint)))
             .await?;
 
         self.parse_response(response).await
     }
 
-    pub(crate) async fn post_multipart<R>(
+    pub(crate) async fn post_multipart<R, F>(
         &self,
         path: &str,
-        form: reqwest::multipart::Form,
+        mut build_form: F,
     ) -> Result<R>
     where
         R: serde::de::DeserializeOwned,
+        F: FnMut() -> Result<reqwest::multipart::Form>,
     {
+        let endpoint = self.config.endpoint(path)?;
         let response = self
-            .authorized(self.http.post(self.config.endpoint(path)?))?
-            .multipart(form)
-            .send()
+            .send_with_retries(|| {
+                Ok(self
+                    .authorized(self.http.post(&endpoint))?
+                    .multipart(build_form()?))
+            })
             .await?;
 
         self.parse_response(response).await
@@ -353,33 +357,11 @@ impl Client {
         R: serde::de::DeserializeOwned,
     {
         let endpoint = self.config.endpoint(path)?;
-        let mut attempt = 0;
+        let response = self
+            .send_with_retries(|| Ok(self.authorized(self.http.post(&endpoint))?.json(body)))
+            .await?;
 
-        loop {
-            let response = self
-                .authorized(self.http.post(&endpoint))?
-                .json(body)
-                .send()
-                .await;
-
-            match response {
-                Ok(response) if response.status().is_success() => {
-                    return self.parse_response(response).await;
-                }
-                Ok(response) if self.should_retry(response.status(), attempt) => {
-                    attempt += 1;
-                    self.sleep_before_retry(attempt).await;
-                }
-                Ok(response) => {
-                    return Err(self.api_error(response).await);
-                }
-                Err(error) if self.should_retry_error(&error, attempt) => {
-                    attempt += 1;
-                    self.sleep_before_retry(attempt).await;
-                }
-                Err(error) => return Err(Error::Http(error)),
-            }
-        }
+        self.parse_response(response).await
     }
 
     async fn parse_response<R>(&self, response: reqwest::Response) -> Result<R>
@@ -440,15 +422,42 @@ impl Client {
         Ok(Box::pin(stream))
     }
 
-    fn should_retry(&self, status: reqwest::StatusCode, attempt: usize) -> bool {
-        attempt < self.config.max_retries()
-            && (status == reqwest::StatusCode::TOO_MANY_REQUESTS || status.is_server_error())
-    }
-
     fn authorized(&self, request: RequestBuilder) -> Result<RequestBuilder> {
         Ok(request
             .bearer_auth(self.config.api_key())
             .headers(self.config.header_map()?))
+    }
+
+    async fn send_with_retries<F>(&self, mut build: F) -> Result<reqwest::Response>
+    where
+        F: FnMut() -> Result<RequestBuilder>,
+    {
+        let mut attempt = 0;
+
+        loop {
+            let response = build()?.send().await;
+
+            match response {
+                Ok(response) => {
+                    if response.status().is_success() {
+                        return Ok(response);
+                    }
+
+                    if self.should_retry(response.status(), attempt) {
+                        let headers = response.headers().clone();
+                        attempt += 1;
+                        self.sleep_before_retry(attempt, Some(&headers)).await;
+                    } else {
+                        return Ok(response);
+                    }
+                }
+                Err(error) if self.should_retry_error(&error, attempt) => {
+                    attempt += 1;
+                    self.sleep_before_retry(attempt, None).await;
+                }
+                Err(error) => return Err(Error::Http(error)),
+            }
+        }
     }
 
     async fn api_error(&self, response: reqwest::Response) -> Error {
@@ -459,12 +468,94 @@ impl Client {
         Error::Api(ApiError::from_parts(status, &headers, body))
     }
 
-    fn should_retry_error(&self, error: &reqwest::Error, attempt: usize) -> bool {
-        attempt < self.config.max_retries() && (error.is_timeout() || error.is_connect())
+    fn should_retry(&self, status: reqwest::StatusCode, attempt: usize) -> bool {
+        attempt < self.config.retry_config().max_retries
+            && (status == reqwest::StatusCode::TOO_MANY_REQUESTS || status.is_server_error())
     }
 
-    async fn sleep_before_retry(&self, attempt: usize) {
-        let millis = 100_u64.saturating_mul(2_u64.saturating_pow(attempt as u32));
-        tokio::time::sleep(Duration::from_millis(millis)).await;
+    fn should_retry_error(&self, error: &reqwest::Error, attempt: usize) -> bool {
+        attempt < self.config.retry_config().max_retries
+            && (error.is_timeout() || error.is_connect())
+    }
+
+    async fn sleep_before_retry(&self, attempt: usize, headers: Option<&HeaderMap>) {
+        let delay = self.retry_delay(attempt, headers);
+        tokio::time::sleep(delay).await;
+    }
+
+    fn retry_delay(&self, attempt: usize, headers: Option<&HeaderMap>) -> Duration {
+        let retry = self.config.retry_config();
+
+        if retry.respect_retry_after {
+            if let Some(delay) = headers.and_then(retry_after_delay) {
+                return delay.min(retry.max_backoff);
+            }
+        }
+
+        let multiplier = 2_u32.saturating_pow(attempt.saturating_sub(1) as u32);
+        let mut delay = retry.initial_backoff.saturating_mul(multiplier);
+        delay = delay.min(retry.max_backoff);
+
+        if retry.jitter {
+            delay = add_jitter(delay, retry.max_backoff);
+        }
+
+        delay
+    }
+}
+
+fn retry_after_delay(headers: &HeaderMap) -> Option<Duration> {
+    let value = headers.get("retry-after")?.to_str().ok()?.trim();
+
+    if let Ok(seconds) = value.parse::<u64>() {
+        return Some(Duration::from_secs(seconds));
+    }
+
+    let retry_at = httpdate::parse_http_date(value).ok()?;
+    retry_at.duration_since(SystemTime::now()).ok()
+}
+
+fn add_jitter(delay: Duration, max_backoff: Duration) -> Duration {
+    if delay.is_zero() {
+        return delay;
+    }
+
+    let nanos = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|duration| duration.subsec_nanos())
+        .unwrap_or(0);
+    let jitter_nanos = (delay.as_nanos() / 4).min(u64::MAX as u128) as u64;
+
+    if jitter_nanos == 0 {
+        return delay;
+    }
+
+    let extra = Duration::from_nanos((nanos as u64) % jitter_nanos);
+    delay.saturating_add(extra).min(max_backoff)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use reqwest::header::HeaderValue;
+
+    #[test]
+    fn retry_after_accepts_seconds() {
+        let mut headers = HeaderMap::new();
+        headers.insert("retry-after", HeaderValue::from_static("3"));
+
+        assert_eq!(retry_after_delay(&headers), Some(Duration::from_secs(3)));
+    }
+
+    #[test]
+    fn retry_after_accepts_http_date() {
+        let retry_at = SystemTime::now() + Duration::from_secs(5);
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            "retry-after",
+            HeaderValue::from_str(&httpdate::fmt_http_date(retry_at)).unwrap(),
+        );
+
+        assert!(retry_after_delay(&headers).is_some());
     }
 }

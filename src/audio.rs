@@ -94,25 +94,35 @@ impl<'a> TranscriptionBuilder<'a> {
             .bytes
             .ok_or_else(|| Error::InvalidConfig("audio bytes are required".to_string()))?;
 
-        let part = reqwest::multipart::Part::bytes(bytes).file_name(filename);
-        let mut form = reqwest::multipart::Form::new()
-            .text("model", model)
-            .part("file", part);
+        let response_format = self.response_format;
+        let language = self.language;
+        let prompt = self.prompt;
+        let extra = self.extra;
 
-        if let Some(response_format) = self.response_format {
-            form = form.text("response_format", response_format);
-        }
-        if let Some(language) = self.language {
-            form = form.text("language", language);
-        }
-        if let Some(prompt) = self.prompt {
-            form = form.text("prompt", prompt);
-        }
-        for (key, value) in self.extra {
-            form = form.text(key, value);
-        }
+        self.client
+            .post_multipart(self.endpoint, || {
+                let part =
+                    reqwest::multipart::Part::bytes(bytes.clone()).file_name(filename.clone());
+                let mut form = reqwest::multipart::Form::new()
+                    .text("model", model.clone())
+                    .part("file", part);
 
-        self.client.post_multipart(self.endpoint, form).await
+                if let Some(response_format) = &response_format {
+                    form = form.text("response_format", response_format.clone());
+                }
+                if let Some(language) = &language {
+                    form = form.text("language", language.clone());
+                }
+                if let Some(prompt) = &prompt {
+                    form = form.text("prompt", prompt.clone());
+                }
+                for (key, value) in &extra {
+                    form = form.text(key.clone(), value.clone());
+                }
+
+                Ok(form)
+            })
+            .await
     }
 }
 
