@@ -3,52 +3,27 @@
 [![CI](https://github.com/edujbarrios/universal-openai-rs/actions/workflows/ci.yml/badge.svg)](https://github.com/edujbarrios/universal-openai-rs/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-`universal-openai-rs` is a self-maintained, OpenAI-compatible APIs wrapper for
-Rust. Optimized for Agents.
+`universal-openai-rs` is a self-maintained, OpenAI-compatible API wrapper for
+Rust with a strong focus on simple agent workflows.
 
-The main purpose is to make AI API calls in Rust simple to write, simple to
-read, and especially simple to compose into lightweight agent workflows, while
-staying close to the OpenAI-compatible request/response format when you need
-full control.
+Use it when you want:
 
-## About
+- short calls for common AI tasks;
+- native lightweight agents without a heavy framework;
+- OpenAI-compatible request and response shapes when you need control;
+- provider-agnostic clients for OpenAI, hosted compatible APIs, and local APIs.
 
-A self-maintained, OpenAI-compatible APIs wrapper for Rust. Optimized for
-Agents.
+## Install
 
-This wrapper puts a huge focus on simplicity while working with agents: define
-small named agents, pass tasks between them, and keep the underlying API calls
-provider-compatible.
+This crate is not published to `crates.io` yet. Use it as a Git dependency or a
+local path dependency.
 
-## What This Project Is
-
-This is an AI engineering utility crate for:
-
-- building agent-style workflows without pulling in a heavy agent framework;
-- calling OpenAI-compatible providers from Rust;
-- keeping common workflows short with helpers like `ask`, `prompt`, and `embed`;
-- using structured builders for chat, responses, embeddings, images, audio,
-  files, models, fine-tuning, moderations, and completions;
-- keeping escape hatches for provider-specific or newly released endpoints.
-
-It is designed for local development, experimentation, and open source evolution,
-with agent simplicity as a primary design goal.
-
-## Install Status
-
-This crate is not published to `crates.io` yet. It is not a Python package and
-is not available on PyPI.
-
-For now, use it as a local crate or as a Git dependency.
-
-## Clone
+Clone the repository:
 
 ```bash
 git clone https://github.com/edujbarrios/universal-openai-rs.git
 cd universal-openai-rs
 ```
-
-## Use From Another Rust Project
 
 Git dependency:
 
@@ -66,19 +41,8 @@ universal-openai-rs = { path = "../universal-openai-rs" }
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 ```
 
-Optional automatic JSON Schema generation from Rust structs:
-
-```toml
-[dependencies]
-universal-openai-rs = {
-    git = "https://github.com/edujbarrios/universal-openai-rs.git",
-    features = ["structured-output"]
-}
-schemars = "0.8"
-```
-
-Minimal dependency install for chat, responses, embeddings, models, images,
-moderations, fine-tuning, agents, and typed tools:
+Minimal install for chat, responses, embeddings, models, images, moderations,
+fine-tuning, agents, and typed tools:
 
 ```toml
 [dependencies]
@@ -87,6 +51,17 @@ universal-openai-rs = {
     default-features = false,
     features = ["rustls"]
 }
+```
+
+Optional typed structured output:
+
+```toml
+[dependencies]
+universal-openai-rs = {
+    git = "https://github.com/edujbarrios/universal-openai-rs.git",
+    features = ["structured-output"]
+}
+schemars = "0.8"
 ```
 
 ## Cargo Features
@@ -127,8 +102,7 @@ async fn main() -> universal_openai_rs::Result<()> {
 
 ## Prompt-First API
 
-Use `prompt(...)` when you want readable application code without manually
-constructing chat messages.
+Use `prompt(...)` for readable app code without manually building chat messages.
 
 ```rust
 use universal_openai_rs::prelude::*;
@@ -143,8 +117,8 @@ let text = Client::from_env()?
 
 ## Responses-First API
 
-Use `respond(...)` for the newer Responses-style workflow: text input,
-multimodal input, tools, structured output, and typed output parsing.
+Use `respond(...)` for Responses-style input, tools, structured output, and
+typed parsing.
 
 ```rust
 use serde::Deserialize;
@@ -172,8 +146,7 @@ let summary: InvoiceSummary = client
     .await?;
 ```
 
-With the optional `structured-output` feature, the schema can be generated from
-the Rust type:
+With `structured-output`, generate schemas from Rust types:
 
 ```rust
 use schemars::JsonSchema;
@@ -198,8 +171,8 @@ let profile: Profile = client
 
 ## Native Lightweight Agents
 
-Agent workflows are a first-class focus of the crate. The native agent layer is
-intentionally lightweight: no scheduler, database, or external agent framework.
+Agents are intentionally lightweight: named instructions, task passing, optional
+tools, and no external agent framework.
 
 ```rust
 use universal_openai_rs::prelude::*;
@@ -226,8 +199,7 @@ let reviewed = agents.agent2(review_task).await?;
 println!("{}", reviewed.output);
 ```
 
-For simple pipelines, `sequence(...)` runs agents in order and passes each output
-to the next agent:
+For simple pipelines, `sequence(...)` passes each output to the next agent:
 
 ```rust
 let run = agents
@@ -235,8 +207,8 @@ let run = agents
     .await?;
 ```
 
-Agents can also carry lightweight executable tools. Tool arguments are decoded
-into typed Rust structs before your function runs.
+Agents can carry executable tools. Arguments are decoded into typed Rust structs
+before your function runs.
 
 ```rust
 use serde::{Deserialize, Serialize};
@@ -269,13 +241,13 @@ let researcher = client.agent("researcher").tool_fn(
 );
 ```
 
-For reusable tools, implement `AiTool` and register it with `ToolRegistry` or
+For reusable tools, implement `AiTool` and register it through `ToolRegistry` or
 `AgentSpec::ai_tool(...)`.
 
 ## Structured Builders
 
-Use builders when you want a request shape that stays close to the
-OpenAI-compatible API.
+Use builders when you want OpenAI-compatible request shapes with typed Rust
+helpers.
 
 ```rust
 let response = client
@@ -292,8 +264,7 @@ let response = client
 
 Requires the `stream` feature.
 
-Use event streams when you need full typed deltas, including tool call deltas.
-Use text chunks when you want to render output as it arrives.
+Use typed events for full deltas, or text chunks for UI/CLI rendering.
 
 ```rust
 use futures_util::StreamExt;
@@ -310,10 +281,9 @@ while let Some(chunk) = chunks.next().await {
 }
 ```
 
-`stream_events()` returns typed `ChatStreamEvent` values. `stream()` remains as a
-backward-compatible alias for `stream_events()`.
+`stream_events()` returns typed `ChatStreamEvent` values. `stream()` is an alias.
 
-For providers that do not emit strict OpenAI SSE, pass another decoder:
+For non-strict providers, pass another decoder:
 
 ```rust
 let events = client
@@ -336,9 +306,8 @@ let custom = Client::compatible("your-api-key", "https://api.example.com/v1")?;
 
 ## Production HTTP Configuration
 
-For production clients, keep the simple crate API while bringing your own
-`reqwest::Client` for proxies, certificates, connection pooling, TCP keepalive,
-global defaults, or custom transport settings.
+Bring your own `reqwest::Client` for proxies, certificates, pooling, TCP
+keepalive, or transport defaults.
 
 ```rust
 use std::time::Duration;
@@ -359,9 +328,8 @@ let config = Config::new("your-api-key")
 let client = Client::with_http_client(config, http)?;
 ```
 
-Retries are configurable and apply to retryable GET, DELETE, multipart, JSON
-POST, timeout, and connection failures. `Retry-After` is respected by default on
-rate limits.
+Retries support backoff, jitter, `Retry-After`, and retryable GET, DELETE,
+multipart, JSON POST, timeout, and connection failures.
 
 ```rust
 use std::time::Duration;
@@ -378,10 +346,7 @@ let config = Config::new("your-api-key").with_retry_config(RetryConfig {
 
 ## Adding an OpenAI-Compatible Third-Party API
 
-Any provider that exposes an OpenAI-compatible `/v1` API can be used by changing
-the base URL.
-
-Example with `llm7.io`:
+Set a compatible `/v1` base URL. Example with `llm7.io`:
 
 ```rust
 use universal_openai_rs::Client;
@@ -399,7 +364,7 @@ async fn main() -> universal_openai_rs::Result<()> {
 }
 ```
 
-You can also use environment variables:
+Or use environment variables:
 
 ```bash
 OPENAI_API_KEY=your-api-key
@@ -472,8 +437,7 @@ Available escape hatches:
 
 ## API Errors
 
-Provider errors keep the raw response body and also expose structured debugging
-fields when the provider returns OpenAI-compatible error JSON.
+Provider errors keep the raw body plus structured fields when available.
 
 ```rust
 match error {
@@ -489,8 +453,7 @@ match error {
 ## Current Caveats
 
 This project is early. Known issue areas include provider-specific response
-shapes, non-standard streaming formats, large multipart uploads, and legacy
-`Engines` compatibility.
+shapes, non-standard streaming, large multipart uploads, and legacy `Engines`.
 
 See [docs/known-issues.md](docs/known-issues.md).
 
