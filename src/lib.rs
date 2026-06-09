@@ -37,6 +37,7 @@
 //! ```
 
 mod agents;
+#[cfg(feature = "audio")]
 mod audio;
 mod chat;
 mod client;
@@ -44,6 +45,7 @@ mod completions;
 mod config;
 mod embeddings;
 mod error;
+#[cfg(feature = "files")]
 mod files;
 mod fine_tuning;
 mod images;
@@ -51,12 +53,14 @@ mod models;
 mod moderations;
 mod prompt;
 mod responses;
+#[cfg(feature = "stream")]
 mod streaming;
 #[cfg(feature = "structured-output")]
 mod structured;
 mod tools;
 
 pub use agents::{AgentChainRun, AgentRun, AgentSpec, Agents};
+#[cfg(feature = "audio")]
 pub use audio::{Audio, AudioResponse, TranscriptionBuilder, TranslationBuilder};
 pub use chat::{
     ChatChoice, ChatCompletionRequest, ChatCompletionResponse, ChatContent, ChatContentPart,
@@ -75,6 +79,7 @@ pub use embeddings::{
     EmbeddingsResponse,
 };
 pub use error::{ApiError, Error, Result};
+#[cfg(feature = "files")]
 pub use files::{
     DeletedFile, FileObject, FileUploadBuilder, Files, ListFilesResponse, UploadedFile,
 };
@@ -93,18 +98,23 @@ pub use responses::{
     ResponseContentPart, ResponseInput, ResponseInputItem, ResponseOutputContent,
     ResponseOutputItem, ResponseRequestBuilder, ResponsesRequest, ResponsesResponse,
 };
+#[cfg(feature = "stream")]
 pub use streaming::{
     ChatStream, JsonLinesDecoder, LenientSseDecoder, OpenAiSseDecoder, StreamDecoder,
     TextChunkStream,
 };
-pub use tools::{AiTool, DynAiTool, FunctionAiTool, ToolExecution, ToolRegistry};
+pub use tools::{AiTool, DynAiTool, FunctionAiTool, ToolExecution, ToolFuture, ToolRegistry};
 
 pub mod prelude {
+    #[cfg(feature = "stream")]
+    pub use crate::{
+        JsonLinesDecoder, LenientSseDecoder, OpenAiSseDecoder, StreamDecoder, TextChunkStream,
+    };
+
     pub use crate::{
         AgentChainRun, AgentRun, AgentSpec, Agents, ApiError, ChatContentPart, ChatMessage, Client,
-        AiTool, Config, DynAiTool, Error, FunctionAiTool, JsonLinesDecoder, LenientSseDecoder,
-        OpenAiSseDecoder, PromptBuilder, Provider, ResponseContentPart, ResponseInput,
-        ResponseInputItem, ResponseOutputContent, ResponseOutputItem, Result, RetryConfig,
-        StreamDecoder, TextChunkStream, Tool, ToolExecution, ToolRegistry,
+        AiTool, Config, DynAiTool, Error, FunctionAiTool, PromptBuilder, Provider,
+        ResponseContentPart, ResponseInput, ResponseInputItem, ResponseOutputContent,
+        ResponseOutputItem, Result, RetryConfig, Tool, ToolExecution, ToolFuture, ToolRegistry,
     };
 }

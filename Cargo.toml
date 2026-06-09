@@ -13,15 +13,22 @@ keywords = ["openai", "llm", "api", "rust", "client"]
 categories = ["api-bindings", "web-programming::http-client"]
 
 [features]
-default = []
+default = ["rustls", "stream", "multipart"]
+rustls = ["reqwest/rustls-tls"]
+native-tls = ["reqwest/native-tls"]
+stream = ["dep:async-stream", "dep:futures-core", "dep:futures-util", "reqwest/stream"]
+multipart = ["reqwest/multipart"]
+agents = []
+audio = ["multipart"]
+files = ["multipart"]
 structured-output = ["dep:schemars"]
 
 [dependencies]
-async-stream = "0.3"
-futures-core = "0.3"
-futures-util = "0.3"
+async-stream = { version = "0.3", optional = true }
+futures-core = { version = "0.3", optional = true }
+futures-util = { version = "0.3", optional = true }
 httpdate = "1"
-reqwest = { version = "0.12", default-features = false, features = ["json", "multipart", "rustls-tls", "stream"] }
+reqwest = { version = "0.12", default-features = false, features = ["json"] }
 schemars = { version = "0.8", optional = true }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
@@ -30,3 +37,18 @@ tokio = { version = "1", features = ["time"] }
 
 [dev-dependencies]
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+
+[[example]]
+name = "audio"
+path = "examples/audio.rs"
+required-features = ["audio"]
+
+[[example]]
+name = "files"
+path = "examples/files.rs"
+required-features = ["files"]
+
+[[example]]
+name = "streaming"
+path = "examples/streaming.rs"
+required-features = ["stream"]

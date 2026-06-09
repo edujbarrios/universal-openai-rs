@@ -112,6 +112,7 @@ impl<'a> PromptBuilder<'a> {
         response.json()
     }
 
+    #[cfg(feature = "stream")]
     pub async fn stream_text(self) -> Result<String> {
         self.into_chat()?.stream_text().await
     }

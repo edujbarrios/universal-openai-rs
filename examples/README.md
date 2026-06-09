@@ -36,6 +36,14 @@ Run an example with:
 cargo run --example ask
 ```
 
+Feature-gated examples:
+
+```bash
+cargo run --example streaming --features stream
+cargo run --example audio --features audio
+cargo run --example files --features files
+```
+
 Set these environment variables first:
 
 ```bash

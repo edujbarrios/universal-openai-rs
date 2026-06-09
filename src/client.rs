@@ -1,10 +1,15 @@
 use crate::{
-    AgentSpec, Agents, ApiError, Audio, ChatCompletionResponse, ChatRequestBuilder, ChatStream,
-    ChatStreamEvent, CompletionRequestBuilder, CompletionResponse, Config, EmbeddingsRequestBuilder,
-    EmbeddingsResponse, Error, FileUploadBuilder, Files, FineTuning, ImagesRequestBuilder, Models,
-    ModerationRequestBuilder, PromptBuilder, Provider, ResponseRequestBuilder, ResponsesResponse,
-    OpenAiSseDecoder, Result, StreamDecoder,
+    AgentSpec, Agents, ApiError, ChatCompletionResponse, ChatRequestBuilder,
+    CompletionRequestBuilder, CompletionResponse, Config, EmbeddingsRequestBuilder,
+    EmbeddingsResponse, Error, FineTuning, ImagesRequestBuilder, Models, ModerationRequestBuilder,
+    PromptBuilder, Provider, ResponseRequestBuilder, ResponsesResponse, Result,
 };
+#[cfg(feature = "audio")]
+use crate::Audio;
+#[cfg(feature = "files")]
+use crate::{FileUploadBuilder, Files};
+#[cfg(feature = "stream")]
+use crate::{ChatStream, ChatStreamEvent, OpenAiSseDecoder, StreamDecoder};
 use reqwest::{header::HeaderMap, RequestBuilder};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
@@ -113,14 +118,17 @@ impl Client {
         Models::new(self)
     }
 
+    #[cfg(feature = "files")]
     pub fn files(&self) -> Files<'_> {
         Files::new(self)
     }
 
+    #[cfg(feature = "files")]
     pub fn upload_file(&self, purpose: impl Into<String>) -> FileUploadBuilder<'_> {
         FileUploadBuilder::new(self, purpose)
     }
 
+    #[cfg(feature = "audio")]
     pub fn audio(&self) -> Audio<'_> {
         Audio::new(self)
     }
@@ -255,6 +263,7 @@ impl Client {
         self.moderations().input(input).send().await
     }
 
+    #[cfg(feature = "audio")]
     pub async fn transcribe(
         &self,
         model: impl Into<String>,
@@ -269,6 +278,7 @@ impl Client {
             .await
     }
 
+    #[cfg(feature = "audio")]
     pub async fn translate_audio(
         &self,
         model: impl Into<String>,
@@ -325,6 +335,7 @@ impl Client {
         self.parse_response(response).await
     }
 
+    #[cfg(feature = "files")]
     pub(crate) async fn get_bytes(&self, path: &str) -> Result<Vec<u8>> {
         let endpoint = self.config.endpoint(path)?;
         let response = self
@@ -351,6 +362,7 @@ impl Client {
         self.parse_response(response).await
     }
 
+    #[cfg(any(feature = "audio", feature = "files"))]
     pub(crate) async fn post_multipart<R, F>(
         &self,
         path: &str,
@@ -397,6 +409,7 @@ impl Client {
         Ok(response.json::<R>().await?)
     }
 
+    #[cfg(feature = "stream")]
     pub(crate) async fn post_sse<T>(&self, path: &str, body: &T) -> Result<ChatStream>
     where
         T: serde::Serialize + ?Sized,
@@ -404,6 +417,7 @@ impl Client {
         self.post_stream(path, body, OpenAiSseDecoder::new()).await
     }
 
+    #[cfg(feature = "stream")]
     pub(crate) async fn post_stream<T, D>(
         &self,
         path: &str,

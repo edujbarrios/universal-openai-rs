@@ -1,7 +1,6 @@
-use futures_util::future::{BoxFuture, FutureExt};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use universal_openai_rs::{AiTool, Error, ToolCall, ToolCallFunction, ToolRegistry};
+use universal_openai_rs::{AiTool, Error, ToolCall, ToolCallFunction, ToolFuture, ToolRegistry};
 
 #[derive(Debug, Deserialize)]
 struct WeatherArgs {
@@ -32,13 +31,12 @@ impl AiTool for WeatherTool {
         })
     }
 
-    fn call(&self, args: Self::Args) -> BoxFuture<'_, universal_openai_rs::Result<Self::Output>> {
-        async move {
+    fn call(&self, args: Self::Args) -> ToolFuture<'_, Self::Output> {
+        Box::pin(async move {
             Ok(WeatherOutput {
                 forecast: format!("cloudy in {}", args.city),
             })
-        }
-        .boxed()
+        })
     }
 }
 

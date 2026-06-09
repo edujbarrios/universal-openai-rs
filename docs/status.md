@@ -31,6 +31,8 @@ simple agent-oriented workflows.
 - Files API for upload, list, retrieve, and delete.
 - Fine-tuning jobs API.
 - Moderations API.
+- Cargo feature flags for TLS backend, streaming, multipart, audio, files, and
+  structured output.
 - Configurable request timeouts.
 - Custom `reqwest::Client` injection for production HTTP configuration.
 - User-Agent, organization, project, and provider-specific request headers.

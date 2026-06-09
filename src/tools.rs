@@ -1,10 +1,11 @@
-use std::{collections::BTreeMap, future::Future, marker::PhantomData, sync::Arc};
+use std::{collections::BTreeMap, future::Future, marker::PhantomData, pin::Pin, sync::Arc};
 
-use futures_util::future::{BoxFuture, FutureExt};
 use serde::{de::DeserializeOwned, Serialize};
 use serde_json::Value;
 
 use crate::{Result, Tool, ToolCall};
+
+pub type ToolFuture<'a, T> = Pin<Box<dyn Future<Output = Result<T>> + Send + 'a>>;
 
 pub trait AiTool: Send + Sync + 'static {
     const NAME: &'static str;
@@ -21,7 +22,7 @@ pub trait AiTool: Send + Sync + 'static {
         })
     }
 
-    fn call(&self, args: Self::Args) -> BoxFuture<'_, Result<Self::Output>>;
+    fn call(&self, args: Self::Args) -> ToolFuture<'_, Self::Output>;
 
     fn definition(&self) -> Tool {
         Tool::function(Self::NAME, Self::DESCRIPTION, self.parameters())
@@ -31,7 +32,7 @@ pub trait AiTool: Send + Sync + 'static {
 pub trait DynAiTool: Send + Sync {
     fn name(&self) -> &str;
     fn definition(&self) -> Tool;
-    fn call_json(&self, arguments: &str) -> BoxFuture<'_, Result<Value>>;
+    fn call_json(&self, arguments: &str) -> ToolFuture<'_, Value>;
 }
 
 impl<T> DynAiTool for T
@@ -46,15 +47,14 @@ where
         AiTool::definition(self)
     }
 
-    fn call_json(&self, arguments: &str) -> BoxFuture<'_, Result<Value>> {
+    fn call_json(&self, arguments: &str) -> ToolFuture<'_, Value> {
         let parsed = serde_json::from_str::<T::Args>(arguments);
 
-        async move {
+        Box::pin(async move {
             let args = parsed?;
             let output = self.call(args).await?;
             Ok(serde_json::to_value(output)?)
-        }
-        .boxed()
+        })
     }
 }
 
@@ -193,15 +193,14 @@ where
         )
     }
 
-    fn call_json(&self, arguments: &str) -> BoxFuture<'_, Result<Value>> {
+    fn call_json(&self, arguments: &str) -> ToolFuture<'_, Value> {
         let parsed = serde_json::from_str::<Args>(arguments);
 
-        async move {
+        Box::pin(async move {
             let args = parsed?;
             let output = (self.call)(args).await?;
             Ok(serde_json::to_value(output)?)
-        }
-        .boxed()
+        })
     }
 }
 

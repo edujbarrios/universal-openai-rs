@@ -1,8 +1,11 @@
+#[cfg(feature = "stream")]
 use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::{ChatStream, Client, Error, Result, StreamDecoder, TextChunkStream, ToolExecution};
+use crate::{Client, Error, Result, ToolExecution};
+#[cfg(feature = "stream")]
+use crate::{ChatStream, StreamDecoder, TextChunkStream};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -475,12 +478,14 @@ impl<'a> ChatRequestBuilder<'a> {
         self.client.post_json("chat/completions", &request).await
     }
 
+    #[cfg(feature = "stream")]
     pub async fn stream_events(mut self) -> Result<ChatStream> {
         self.stream = Some(true);
         let request = self.build()?;
         self.client.post_sse("chat/completions", &request).await
     }
 
+    #[cfg(feature = "stream")]
     pub async fn stream_events_with_decoder<D>(mut self, decoder: D) -> Result<ChatStream>
     where
         D: StreamDecoder<Event = ChatStreamEvent> + Send + 'static,
@@ -492,15 +497,18 @@ impl<'a> ChatRequestBuilder<'a> {
             .await
     }
 
+    #[cfg(feature = "stream")]
     pub async fn stream(self) -> Result<ChatStream> {
         self.stream_events().await
     }
 
+    #[cfg(feature = "stream")]
     pub async fn stream_text_chunks(self) -> Result<TextChunkStream> {
         let events = self.stream_events().await?;
         Ok(crate::streaming::text_chunks_from_events(events))
     }
 
+    #[cfg(feature = "stream")]
     pub async fn stream_text(self) -> Result<String> {
         let mut stream = self.stream_text_chunks().await?;
         let mut output = String::new();

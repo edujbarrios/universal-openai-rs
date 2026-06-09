@@ -77,6 +77,33 @@ universal-openai-rs = {
 schemars = "0.8"
 ```
 
+Minimal dependency install for chat, responses, embeddings, models, images,
+moderations, fine-tuning, agents, and typed tools:
+
+```toml
+[dependencies]
+universal-openai-rs = {
+    git = "https://github.com/edujbarrios/universal-openai-rs.git",
+    default-features = false,
+    features = ["rustls"]
+}
+```
+
+## Cargo Features
+
+Default features are `rustls`, `stream`, and `multipart`.
+
+| Feature | Enables |
+| --- | --- |
+| `rustls` | HTTPS with `rustls-tls` |
+| `native-tls` | HTTPS with platform native TLS |
+| `stream` | SSE/JSONL streaming helpers and stream dependencies |
+| `multipart` | Multipart request support |
+| `audio` | Audio transcription and translation builders |
+| `files` | Files upload/list/retrieve/delete/download API |
+| `agents` | Reserved marker for agent-focused builds |
+| `structured-output` | Automatic JSON Schema from Rust structs via `schemars` |
+
 Import it in Rust as:
 
 ```rust
@@ -263,6 +290,8 @@ let response = client
 
 ## Streaming
 
+Requires the `stream` feature.
+
 Use event streams when you need full typed deltas, including tool call deltas.
 Use text chunks when you want to render output as it arrives.
 
@@ -394,8 +423,8 @@ Vision inputs support image URLs and base64 data URLs such as:
 data:image/png;base64,...
 ```
 
-Files can be uploaded, listed, inspected, deleted, and downloaded with
-`client.files().content(file_id)`.
+With the `files` feature, files can be uploaded, listed, inspected, deleted, and
+downloaded with `client.files().content(file_id)`.
 
 ## Endpoint Coverage
 
@@ -407,8 +436,8 @@ Files can be uploaded, listed, inspected, deleted, and downloaded with
 | Responses | `client.respond(...)` / `client.responses()` / `client.respond_text(...)` |
 | Embeddings | `client.embeddings()` / `client.embed(...)` |
 | Images | `client.images()` / `client.generate_image(...)` |
-| Audio | `client.audio()` / `client.transcribe(...)` |
-| Files | `client.files()` / `client.upload_file(...)` |
+| Audio | `client.audio()` / `client.transcribe(...)` with `audio` |
+| Files | `client.files()` / `client.upload_file(...)` with `files` |
 | Fine-tuning | `client.fine_tuning()` |
 | Moderations | `client.moderations()` / `client.moderate_text(...)` |
 | Agents | `client.agents()` |
