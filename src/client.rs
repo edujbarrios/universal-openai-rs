@@ -105,6 +105,10 @@ impl Client {
         ResponseRequestBuilder::new(self)
     }
 
+    pub fn respond(&self, input: impl Into<String>) -> ResponseRequestBuilder<'_> {
+        self.responses().input(input)
+    }
+
     pub fn models(&self) -> Models<'_> {
         Models::new(self)
     }

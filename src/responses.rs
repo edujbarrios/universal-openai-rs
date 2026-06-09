@@ -89,6 +89,54 @@ pub struct ResponsesResponse {
     pub extra: serde_json::Map<String, Value>,
 }
 
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ResponseOutputItem {
+    #[serde(rename = "type")]
+    pub kind: String,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub id: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub status: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub role: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub content: Option<Vec<ResponseOutputContent>>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub arguments: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub call_id: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub output: Option<Value>,
+
+    #[serde(flatten)]
+    pub extra: serde_json::Map<String, Value>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ResponseOutputContent {
+    #[serde(rename = "type")]
+    pub kind: String,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub text: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub annotations: Option<Vec<Value>>,
+
+    #[serde(flatten)]
+    pub extra: serde_json::Map<String, Value>,
+}
+
 #[derive(Debug, Clone)]
 pub struct ResponseRequestBuilder<'a> {
     client: &'a Client,
@@ -125,6 +173,10 @@ impl<'a> ResponseRequestBuilder<'a> {
     pub fn input(mut self, input: impl Into<String>) -> Self {
         self.input = Some(ResponseInput::Text(input.into()));
         self
+    }
+
+    pub fn input_text(self, input: impl Into<String>) -> Self {
+        self.input(input)
     }
 
     pub fn input_items(mut self, items: Vec<Value>) -> Self {
@@ -173,6 +225,17 @@ impl<'a> ResponseRequestBuilder<'a> {
         self
     }
 
+    pub fn json_schema_for<T>(self, schema: Value) -> Self
+    where
+        T: serde::de::DeserializeOwned,
+    {
+        let name = std::any::type_name::<T>()
+            .rsplit("::")
+            .next()
+            .unwrap_or("response");
+        self.json_schema(name, schema)
+    }
+
     pub fn extra(mut self, key: impl Into<String>, value: impl Into<Value>) -> Self {
         self.extra.insert(key.into(), value.into());
         self
@@ -204,6 +267,17 @@ impl<'a> ResponseRequestBuilder<'a> {
         let request = self.build()?;
         self.client.post_json("responses", &request).await
     }
+
+    pub async fn run_text(self) -> Result<String> {
+        self.send().await?.text()
+    }
+
+    pub async fn run_json<T>(self) -> Result<T>
+    where
+        T: serde::de::DeserializeOwned,
+    {
+        self.send().await?.json()
+    }
 }
 
 impl ResponsesResponse {
@@ -231,6 +305,27 @@ impl ResponsesResponse {
     {
         let text = self.first_text().ok_or(Error::MissingText)?;
         Ok(serde_json::from_str(text)?)
+    }
+
+    pub fn output_items(&self) -> Result<Vec<ResponseOutputItem>> {
+        let Some(output) = &self.output else {
+            return Ok(Vec::new());
+        };
+
+        output
+            .iter()
+            .cloned()
+            .map(serde_json::from_value)
+            .collect::<std::result::Result<Vec<_>, _>>()
+            .map_err(Error::from)
+    }
+
+    pub fn function_calls(&self) -> Result<Vec<ResponseOutputItem>> {
+        Ok(self
+            .output_items()?
+            .into_iter()
+            .filter(|item| item.kind == "function_call")
+            .collect())
     }
 }
 

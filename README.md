@@ -103,6 +103,37 @@ let text = Client::from_env()?
     .await?;
 ```
 
+## Responses-First API
+
+Use `respond(...)` for the newer Responses-style workflow: text input,
+multimodal input, tools, structured output, and typed output parsing.
+
+```rust
+use serde::Deserialize;
+use serde_json::json;
+use universal_openai_rs::prelude::*;
+
+#[derive(Deserialize)]
+struct InvoiceSummary {
+    status: String,
+    amount: f64,
+}
+
+let summary: InvoiceSummary = client
+    .respond("Summarize the latest invoice.")
+    .model("gpt-4.1-mini")
+    .json_schema_for::<InvoiceSummary>(json!({
+        "type": "object",
+        "properties": {
+            "status": {"type": "string"},
+            "amount": {"type": "number"}
+        },
+        "required": ["status", "amount"]
+    }))
+    .run_json()
+    .await?;
+```
+
 ## Native Lightweight Agents
 
 Agent workflows are a first-class focus of the crate. The native agent layer is
@@ -338,7 +369,7 @@ Files can be uploaded, listed, inspected, deleted, and downloaded with
 | Models | `client.models()` / `client.list_models()` |
 | Completions | `client.completions()` / `client.complete_text(...)` |
 | Chat | `client.chat()` / `client.prompt(...)` |
-| Responses | `client.responses()` / `client.respond_text(...)` |
+| Responses | `client.respond(...)` / `client.responses()` / `client.respond_text(...)` |
 | Embeddings | `client.embeddings()` / `client.embed(...)` |
 | Images | `client.images()` / `client.generate_image(...)` |
 | Audio | `client.audio()` / `client.transcribe(...)` |

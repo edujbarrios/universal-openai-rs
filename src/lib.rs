@@ -88,8 +88,8 @@ pub use moderations::{
 };
 pub use prompt::PromptBuilder;
 pub use responses::{
-    ResponseContentPart, ResponseInput, ResponseInputItem, ResponseRequestBuilder,
-    ResponsesRequest, ResponsesResponse,
+    ResponseContentPart, ResponseInput, ResponseInputItem, ResponseOutputContent,
+    ResponseOutputItem, ResponseRequestBuilder, ResponsesRequest, ResponsesResponse,
 };
 pub use streaming::{
     ChatStream, JsonLinesDecoder, LenientSseDecoder, OpenAiSseDecoder, StreamDecoder,
@@ -102,7 +102,7 @@ pub mod prelude {
         AgentChainRun, AgentRun, AgentSpec, Agents, ApiError, ChatContentPart, ChatMessage, Client,
         AiTool, Config, DynAiTool, Error, FunctionAiTool, JsonLinesDecoder, LenientSseDecoder,
         OpenAiSseDecoder, PromptBuilder, Provider, ResponseContentPart, ResponseInput,
-        ResponseInputItem, Result, RetryConfig, StreamDecoder, TextChunkStream, Tool,
-        ToolExecution, ToolRegistry,
+        ResponseInputItem, ResponseOutputContent, ResponseOutputItem, Result, RetryConfig,
+        StreamDecoder, TextChunkStream, Tool, ToolExecution, ToolRegistry,
     };
 }

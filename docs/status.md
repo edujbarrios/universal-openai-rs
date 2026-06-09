@@ -25,6 +25,8 @@ simple agent-oriented workflows.
 - Audio transcription and translation.
 - Responses API.
 - Typed multimodal Responses API input.
+- Responses-first `client.respond(...)` helper.
+- Typed Responses output item helpers.
 - Files API for upload, list, retrieve, and delete.
 - Fine-tuning jobs API.
 - Moderations API.
