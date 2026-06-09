@@ -12,12 +12,17 @@ readme = "README.md"
 keywords = ["openai", "llm", "api", "rust", "client"]
 categories = ["api-bindings", "web-programming::http-client"]
 
+[features]
+default = []
+structured-output = ["dep:schemars"]
+
 [dependencies]
 async-stream = "0.3"
 futures-core = "0.3"
 futures-util = "0.3"
 httpdate = "1"
 reqwest = { version = "0.12", default-features = false, features = ["json", "multipart", "rustls-tls", "stream"] }
+schemars = { version = "0.8", optional = true }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 thiserror = "1"

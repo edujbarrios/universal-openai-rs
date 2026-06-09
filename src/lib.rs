@@ -52,6 +52,8 @@ mod moderations;
 mod prompt;
 mod responses;
 mod streaming;
+#[cfg(feature = "structured-output")]
+mod structured;
 mod tools;
 
 pub use agents::{AgentChainRun, AgentRun, AgentSpec, Agents};

@@ -66,6 +66,17 @@ universal-openai-rs = { path = "../universal-openai-rs" }
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 ```
 
+Optional automatic JSON Schema generation from Rust structs:
+
+```toml
+[dependencies]
+universal-openai-rs = {
+    git = "https://github.com/edujbarrios/universal-openai-rs.git",
+    features = ["structured-output"]
+}
+schemars = "0.8"
+```
+
 Import it in Rust as:
 
 ```rust
@@ -131,6 +142,30 @@ let summary: InvoiceSummary = client
         "required": ["status", "amount"]
     }))
     .run_json()
+    .await?;
+```
+
+With the optional `structured-output` feature, the schema can be generated from
+the Rust type:
+
+```rust
+use schemars::JsonSchema;
+use serde::Deserialize;
+
+#[derive(Deserialize, JsonSchema)]
+struct Profile {
+    title: String,
+    strengths: Vec<String>,
+}
+
+let profile: Profile = client
+    .respond("Return an AI engineer profile.")
+    .model("gpt-4.1-mini")
+    .run_structured()
+    .await?;
+
+let profile: Profile = client
+    .ask_structured("gpt-4o-mini", "Return an AI engineer profile.")
     .await?;
 ```
 

@@ -429,6 +429,17 @@ impl<'a> ChatRequestBuilder<'a> {
         self
     }
 
+    #[cfg(feature = "structured-output")]
+    pub fn json_schema_auto<T>(self) -> Self
+    where
+        T: serde::de::DeserializeOwned + schemars::JsonSchema,
+    {
+        self.json_schema(
+            crate::structured::schema_name::<T>(),
+            crate::structured::schema_for::<T>(),
+        )
+    }
+
     pub fn extra(mut self, key: impl Into<String>, value: impl Into<Value>) -> Self {
         self.extra.insert(key.into(), value.into());
         self

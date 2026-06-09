@@ -17,6 +17,7 @@ simple agent-oriented workflows.
 - Testable streaming decoders for OpenAI SSE, lenient SSE, and JSON Lines.
 - Text chunk streaming helpers for UI and CLI use.
 - Structured output helpers.
+- Optional typed structured output schema generation with `structured-output`.
 - Tool calling helpers.
 - Typed tool execution helpers for lightweight agents.
 - Vision and multimodal chat.

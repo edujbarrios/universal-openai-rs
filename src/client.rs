@@ -187,6 +187,24 @@ impl Client {
         Ok(serde_json::from_str(&text)?)
     }
 
+    #[cfg(feature = "structured-output")]
+    pub async fn ask_structured<T>(
+        &self,
+        model: impl Into<String>,
+        prompt: impl Into<String>,
+    ) -> Result<T>
+    where
+        T: serde::de::DeserializeOwned + schemars::JsonSchema,
+    {
+        self.chat()
+            .model(model)
+            .user(prompt)
+            .json_schema_auto::<T>()
+            .send()
+            .await?
+            .json()
+    }
+
     pub async fn embed_text(
         &self,
         model: impl Into<String>,
