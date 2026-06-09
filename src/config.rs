@@ -1,10 +1,10 @@
 use crate::{Error, Result};
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
-use std::time::Duration;
+use std::{fmt, time::Duration};
 
 const DEFAULT_BASE_URL: &str = "https://api.openai.com/v1";
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct Config {
     api_key: String,
     base_url: String,
@@ -15,6 +15,29 @@ pub struct Config {
     organization: Option<String>,
     project: Option<String>,
     headers: Vec<(String, String)>,
+}
+
+impl fmt::Debug for Config {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let header_names = self
+            .headers
+            .iter()
+            .map(|(name, _)| name.as_str())
+            .collect::<Vec<_>>();
+
+        formatter
+            .debug_struct("Config")
+            .field("api_key", &"<redacted>")
+            .field("base_url", &self.base_url)
+            .field("timeout", &self.timeout)
+            .field("retry", &self.retry)
+            .field("default_model", &self.default_model)
+            .field("user_agent", &self.user_agent)
+            .field("organization", &self.organization)
+            .field("project", &self.project)
+            .field("header_names", &header_names)
+            .finish()
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

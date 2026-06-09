@@ -43,6 +43,22 @@ fn config_stores_production_http_headers() {
 }
 
 #[test]
+fn config_debug_redacts_api_key_and_header_values() {
+    let config = Config::new("sk-secret-test-key")
+        .with_base_url("https://api.example.com/v1")
+        .with_header("x-provider-secret", "secret-header-value")
+        .with_default_model("gpt-4o-mini");
+
+    let debug = format!("{config:?}");
+
+    assert!(debug.contains("api_key: \"<redacted>\""));
+    assert!(debug.contains("https://api.example.com/v1"));
+    assert!(debug.contains("x-provider-secret"));
+    assert!(!debug.contains("sk-secret-test-key"));
+    assert!(!debug.contains("secret-header-value"));
+}
+
+#[test]
 fn config_accepts_full_retry_configuration() {
     let retry = RetryConfig {
         max_retries: 5,

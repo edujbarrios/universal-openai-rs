@@ -40,6 +40,8 @@ simple agent-oriented workflows.
   coverage.
 - Structured API errors with raw body, provider code, parameter, type, and
   request id extraction.
+- Redacted `Config` debug output to avoid leaking API keys or custom header
+  values in logs.
 - Provider presets and custom OpenAI-compatible base URLs.
 - Raw compatibility escape hatches for POST, GET, and DELETE.
 
