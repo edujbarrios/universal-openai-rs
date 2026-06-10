@@ -100,8 +100,8 @@ impl Config {
     }
 
     pub fn from_env() -> Result<Self> {
-        let api_key =
-            std::env::var("OPENAI_API_KEY").map_err(|_| Error::MissingEnv("OPENAI_API_KEY"))?;
+        let api_key = std::env::var("OPENAI_API_KEY")
+            .map_err(|_| Error::MissingEnv("OPENAI_API_KEY"))?;
         let base_url =
             std::env::var("OPENAI_BASE_URL").unwrap_or_else(|_| DEFAULT_BASE_URL.to_string());
         let default_model = std::env::var("OPENAI_MODEL").ok();
