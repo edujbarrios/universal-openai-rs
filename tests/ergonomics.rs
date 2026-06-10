@@ -119,7 +119,8 @@ fn api_error_extracts_openai_compatible_fields_and_request_id() {
 #[test]
 fn api_error_keeps_raw_body_for_non_json_provider_errors() {
     let headers = reqwest::header::HeaderMap::new();
-    let error = ApiError::from_parts(reqwest::StatusCode::BAD_GATEWAY, &headers, "upstream down");
+    let error =
+        ApiError::from_parts(reqwest::StatusCode::BAD_GATEWAY, &headers, "upstream down");
 
     assert_eq!(error.body, "upstream down");
     assert_eq!(error.error_type, None);
