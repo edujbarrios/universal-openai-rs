@@ -462,8 +462,12 @@ See [docs/known-issues.md](docs/known-issues.md).
 ```bash
 cargo fmt --check
 cargo clippy --all-targets -- -D warnings
+cargo check --no-default-features --features rustls
+cargo check --no-default-features --features native-tls
+cargo check --all-targets --features "audio files structured-output stream"
 cargo check --examples
 cargo test
+cargo test --features "audio files structured-output stream"
 cargo doc --no-deps
 ```
 

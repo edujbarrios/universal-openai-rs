@@ -23,11 +23,23 @@ jobs:
       - name: Run clippy
         run: cargo clippy --all-targets -- -D warnings
 
+      - name: Check minimal rustls build
+        run: cargo check --no-default-features --features rustls
+
+      - name: Check native-tls build
+        run: cargo check --no-default-features --features native-tls
+
+      - name: Check optional feature build
+        run: cargo check --all-targets --features "audio files structured-output stream"
+
       - name: Check examples
         run: cargo check --examples
 
       - name: Run tests
         run: cargo test
+
+      - name: Run optional feature tests
+        run: cargo test --features "audio files structured-output stream"
 
       - name: Build docs
         run: cargo doc --no-deps
